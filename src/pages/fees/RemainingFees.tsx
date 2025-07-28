@@ -1,0 +1,322 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, Search, Phone, Mail, Download } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DefaulterData {
+  id: string;
+  student_id: string;
+  total_amount: number;
+  paid_amount: number;
+  outstanding_amount: number;
+  due_date: string;
+  students: {
+    first_name: string;
+    last_name: string;
+    student_id: string;
+    class_grade: string;
+    section: string;
+    parent_name: string;
+    parent_phone: string;
+    parent_email: string;
+  };
+}
+
+export default function RemainingFees() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [classFilter, setClassFilter] = useState("all");
+  const [overdueFilter, setOverdueFilter] = useState("all");
+
+  const { data: defaulters, isLoading } = useQuery({
+    queryKey: ['remaining-fees', searchTerm, classFilter, overdueFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from('student_fees')
+        .select(`
+          *,
+          students (
+            first_name,
+            last_name,
+            student_id,
+            class_grade,
+            section,
+            parent_name,
+            parent_phone,
+            parent_email
+          )
+        `)
+        .gt('outstanding_amount', 0)
+        .order('outstanding_amount', { ascending: false });
+
+      if (searchTerm) {
+        query = query.or(`students.first_name.ilike.%${searchTerm}%,students.last_name.ilike.%${searchTerm}%,students.student_id.ilike.%${searchTerm}%`);
+      }
+
+      if (classFilter !== "all") {
+        query = query.eq('students.class_grade', classFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      let result = data as DefaulterData[];
+
+      if (overdueFilter === "overdue") {
+        const today = new Date().toISOString().split('T')[0];
+        result = result.filter(record => record.due_date && record.due_date < today);
+      }
+
+      return result;
+    }
+  });
+
+  const { data: summary } = useQuery({
+    queryKey: ['defaulter-summary'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('student_fees')
+        .select('outstanding_amount, due_date')
+        .gt('outstanding_amount', 0);
+
+      if (error) throw error;
+
+      const totalOutstanding = data.reduce((sum, record) => sum + Number(record.outstanding_amount), 0);
+      const totalDefaulters = data.length;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const overdueCount = data.filter(record => record.due_date && record.due_date < today).length;
+      const overdueAmount = data
+        .filter(record => record.due_date && record.due_date < today)
+        .reduce((sum, record) => sum + Number(record.outstanding_amount), 0);
+
+      return {
+        totalOutstanding,
+        totalDefaulters,
+        overdueCount,
+        overdueAmount
+      };
+    }
+  });
+
+  const getDaysOverdue = (dueDate: string) => {
+    if (!dueDate) return 0;
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = today.getTime() - due.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const classes = Array.from(new Set(defaulters?.map(d => d.students.class_grade) || []));
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Remaining Fees</h1>
+        <p className="text-muted-foreground">Track and manage outstanding fee payments</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold">₹{(summary?.totalOutstanding || 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Total Outstanding</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-warning rounded-full flex items-center justify-center">
+                <span className="text-warning-foreground font-bold text-sm">{summary?.totalDefaulters || 0}</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold">{summary?.totalDefaulters || 0}</p>
+                <p className="text-xs text-muted-foreground">Students with Dues</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-destructive rounded-full flex items-center justify-center">
+                <span className="text-destructive-foreground font-bold text-sm">{summary?.overdueCount || 0}</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold">{summary?.overdueCount || 0}</p>
+                <p className="text-xs text-muted-foreground">Overdue Students</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-accent rounded-full flex items-center justify-center">
+                <span className="text-accent-foreground font-bold text-sm">₹</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold">₹{(summary?.overdueAmount || 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Overdue Amount</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            Defaulter List
+          </CardTitle>
+          <CardDescription>Students with outstanding fee payments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-6 flex-wrap">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Class" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {classes.map((cls) => (
+                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={overdueFilter} onValueChange={setOverdueFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Dues</SelectItem>
+                <SelectItem value="overdue">Overdue Only</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading defaulter data...</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Parent Contact</TableHead>
+                    <TableHead>Total Fees</TableHead>
+                    <TableHead>Paid</TableHead>
+                    <TableHead>Outstanding</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {defaulters?.map((record) => {
+                    const daysOverdue = getDaysOverdue(record.due_date);
+                    const isOverdue = daysOverdue > 0;
+                    
+                    return (
+                      <TableRow key={record.id} className={isOverdue ? "bg-destructive/5" : ""}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{record.students.first_name} {record.students.last_name}</p>
+                            <p className="text-sm text-muted-foreground">{record.students.student_id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{record.students.class_grade}-{record.students.section}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-sm">{record.students.parent_name}</p>
+                            <p className="text-xs text-muted-foreground">{record.students.parent_phone}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">₹{record.total_amount}</TableCell>
+                        <TableCell className="text-success">₹{record.paid_amount}</TableCell>
+                        <TableCell className="text-destructive font-bold">₹{record.outstanding_amount}</TableCell>
+                        <TableCell>
+                          {record.due_date ? (
+                            <div>
+                              <p className="text-sm">{new Date(record.due_date).toLocaleDateString()}</p>
+                              {isOverdue && (
+                                <p className="text-xs text-destructive">{daysOverdue} days overdue</p>
+                              )}
+                            </div>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isOverdue ? (
+                            <Badge variant="destructive">Overdue</Badge>
+                          ) : (
+                            <Badge variant="secondary">Due</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="outline" size="sm" title="Call Parent">
+                              <Phone className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" title="Send Email">
+                              <Mail className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              {defaulters?.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="w-8 h-8 text-success" />
+                  </div>
+                  <p className="text-lg font-medium text-success">Great! No outstanding fees</p>
+                  <p className="text-muted-foreground">All students have cleared their dues.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
