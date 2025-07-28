@@ -22,12 +22,14 @@ interface StudentData {
   section: string;
   email: string;
   address: string;
+  dateOfBirth: string;
   isActive: boolean;
   useTransport: boolean;
   tuitionFees: number;
   admissionFees: number;
   transportFees: number;
   otherFees: number;
+  previousYearFees: number;
   discount: number;
 }
 
@@ -48,12 +50,14 @@ export default function EnrollStudent() {
     section: "",
     email: "",
     address: "",
+    dateOfBirth: "",
     isActive: true,
     useTransport: false,
     tuitionFees: 2000,
     admissionFees: 0,
     transportFees: 0,
     otherFees: 0,
+    previousYearFees: 0,
     discount: 0
   });
 
@@ -74,8 +78,8 @@ export default function EnrollStudent() {
   };
 
   const calculateTotalFees = () => {
-    const { tuitionFees, admissionFees, transportFees, otherFees, discount } = studentData;
-    const total = tuitionFees + admissionFees + transportFees + otherFees;
+    const { tuitionFees, admissionFees, transportFees, otherFees, previousYearFees, discount } = studentData;
+    const total = tuitionFees + admissionFees + transportFees + otherFees + previousYearFees;
     const discountAmount = (total * discount) / 100;
     return total - discountAmount;
   };
@@ -98,6 +102,7 @@ export default function EnrollStudent() {
           phone: studentData.phone,
           email: studentData.email,
           address: studentData.address,
+          date_of_birth: studentData.dateOfBirth || null,
           status: studentData.isActive ? 'active' : 'inactive'
         })
         .select()
@@ -283,6 +288,15 @@ export default function EnrollStudent() {
                   placeholder="Enter email address"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={studentData.dateOfBirth}
+                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -378,22 +392,29 @@ export default function EnrollStudent() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="discount">Discount (%)</Label>
-                <Select 
-                  value={studentData.discount.toString()} 
-                  onValueChange={(value) => handleInputChange('discount', Number(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select discount" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 7 }, (_, i) => i * 5).map((discount) => (
-                      <SelectItem key={discount} value={discount.toString()}>
-                        {discount}%
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="previousYearFees">Previous Year Fees</Label>
+                <Input
+                  id="previousYearFees"
+                  type="number"
+                  value={studentData.previousYearFees}
+                  onChange={(e) => handleInputChange('previousYearFees', Number(e.target.value))}
+                  placeholder="Enter previous year dues"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discount">Discount (%) - Max 30%</Label>
+                <Input
+                  id="discount"
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={studentData.discount}
+                  onChange={(e) => {
+                    const value = Math.min(30, Math.max(0, Number(e.target.value)));
+                    handleInputChange('discount', value);
+                  }}
+                  placeholder="Enter discount percentage (0-30%)"
+                />
               </div>
             </div>
 
@@ -416,9 +437,13 @@ export default function EnrollStudent() {
                   <span>Other Fees:</span>
                   <span>₹{studentData.otherFees}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>Previous Year Fees:</span>
+                  <span>₹{studentData.previousYearFees}</span>
+                </div>
                 <div className="flex justify-between text-destructive">
                   <span>Discount ({studentData.discount}%):</span>
-                  <span>-₹{((studentData.tuitionFees + studentData.admissionFees + studentData.transportFees + studentData.otherFees) * studentData.discount / 100).toFixed(2)}</span>
+                  <span>-₹{((studentData.tuitionFees + studentData.admissionFees + studentData.transportFees + studentData.otherFees + studentData.previousYearFees) * studentData.discount / 100).toFixed(2)}</span>
                 </div>
                 <hr className="my-2" />
                 <div className="flex justify-between font-semibold">

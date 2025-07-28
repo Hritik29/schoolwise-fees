@@ -13,7 +13,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex-1 flex flex-col">
           <header className="h-16 flex items-center justify-between border-b bg-card px-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="lg:hidden" />
+              <SidebarTrigger />
               <div>
                 <h1 className="text-xl font-semibold text-foreground">SchoolWise Fees</h1>
                 <p className="text-sm text-muted-foreground">School Fee Management System</p>
