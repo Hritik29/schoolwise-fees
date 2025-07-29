@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertTriangle, Search, Phone, Mail, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { exportDefaultersToExcel } from "@/utils/exportToExcel";
 
 interface DefaulterData {
   id: string;
@@ -32,6 +34,7 @@ export default function RemainingFees() {
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [overdueFilter, setOverdueFilter] = useState("all");
+  const { toast } = useToast();
 
   const { data: defaulters, isLoading } = useQuery({
     queryKey: ['remaining-fees', searchTerm, classFilter, overdueFilter],
@@ -40,7 +43,7 @@ export default function RemainingFees() {
         .from('student_fees')
         .select(`
           *,
-          students (
+          students!inner (
             first_name,
             last_name,
             student_id,
@@ -54,8 +57,49 @@ export default function RemainingFees() {
         .gt('outstanding_amount', 0)
         .order('outstanding_amount', { ascending: false });
 
-      if (searchTerm) {
-        query = query.or(`students.first_name.ilike.%${searchTerm}%,students.last_name.ilike.%${searchTerm}%,students.student_id.ilike.%${searchTerm}%`);
+      if (searchTerm && searchTerm.trim() !== "") {
+        // Get all defaulters first, then filter
+        const { data: allData, error: allError } = await supabase
+          .from('student_fees')
+          .select(`
+            *,
+            students!inner (
+              first_name,
+              last_name,
+              student_id,
+              class_grade,
+              section,
+              parent_name,
+              parent_phone,
+              parent_email
+            )
+          `)
+          .gt('outstanding_amount', 0)
+          .order('outstanding_amount', { ascending: false });
+
+        if (allError) throw allError;
+
+        const filteredData = allData.filter((record: any) => {
+          const searchLower = searchTerm.toLowerCase();
+          return (
+            record.students.first_name.toLowerCase().includes(searchLower) ||
+            record.students.last_name.toLowerCase().includes(searchLower) ||
+            record.students.student_id.toLowerCase().includes(searchLower)
+          );
+        });
+
+        let result = filteredData;
+
+        if (classFilter !== "all") {
+          result = result.filter((record: any) => record.students.class_grade === classFilter);
+        }
+
+        if (overdueFilter === "overdue") {
+          const today = new Date().toISOString().split('T')[0];
+          result = result.filter((record: any) => record.due_date && record.due_date < today);
+        }
+
+        return result as DefaulterData[];
       }
 
       if (classFilter !== "all") {
@@ -114,6 +158,31 @@ export default function RemainingFees() {
   };
 
   const classes = Array.from(new Set(defaulters?.map(d => d.students.class_grade) || []));
+
+  const handleExportToExcel = () => {
+    if (!defaulters || defaulters.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No defaulter data available to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = exportDefaultersToExcel(defaulters);
+    if (success) {
+      toast({
+        title: "Success!",
+        description: "Defaulter data exported to Excel successfully"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to export data to Excel",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -220,9 +289,9 @@ export default function RemainingFees() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" size="sm">
+            <Button onClick={handleExportToExcel} variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export to Excel
             </Button>
           </div>
 

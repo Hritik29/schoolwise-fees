@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, User, CreditCard, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, User, CreditCard, DollarSign, Receipt } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReceiptSlip from "@/components/ReceiptSlip";
 
 interface SelectedStudent {
   id: string;
@@ -37,9 +39,12 @@ export default function DepositFees() {
     payerName: "",
     paymentMethod: "cash",
     referenceNumber: "",
-    remarks: ""
+    remarks: "",
+    feeType: "tuition"
   });
   const [loading, setLoading] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastTransaction, setLastTransaction] = useState<any>(null);
   const { toast } = useToast();
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
@@ -105,7 +110,7 @@ export default function DepositFees() {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: transaction, error } = await supabase
         .from('fee_transactions')
         .insert({
           student_id: selectedStudent.id,
@@ -114,27 +119,27 @@ export default function DepositFees() {
           payment_method: paymentData.paymentMethod,
           reference_number: paymentData.referenceNumber,
           remarks: paymentData.remarks,
-          created_by: paymentData.payerName
-        });
+          created_by: paymentData.payerName,
+          fee_type: paymentData.feeType
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Prepare receipt data
+      setLastTransaction({
+        ...transaction,
+        student: selectedStudent
+      });
 
       toast({
         title: "Success!",
         description: "Payment recorded successfully",
       });
 
-      // Reset form
-      setSelectedStudent(null);
-      setStudentFees(null);
-      setPaymentData({
-        amount: "",
-        payerName: "",
-        paymentMethod: "cash",
-        referenceNumber: "",
-        remarks: ""
-      });
-      setSearchTerm("");
+      // Show receipt
+      setShowReceipt(true);
 
     } catch (error: any) {
       toast({
@@ -264,13 +269,14 @@ export default function DepositFees() {
                 onClick={() => {
                   setSelectedStudent(null);
                   setStudentFees(null);
-                  setPaymentData({
-                    amount: "",
-                    payerName: "",
-                    paymentMethod: "cash",
-                    referenceNumber: "",
-                    remarks: ""
-                  });
+                setPaymentData({
+                  amount: "",
+                  payerName: "",
+                  paymentMethod: "cash",
+                  referenceNumber: "",
+                  remarks: "",
+                  feeType: "tuition"
+                });
                 }}
                 className="w-full"
               >
@@ -343,6 +349,25 @@ export default function DepositFees() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="feeType">Fee Type *</Label>
+                <Select
+                  value={paymentData.feeType}
+                  onValueChange={(value) => setPaymentData(prev => ({ ...prev, feeType: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tuition">Tuition Fee</SelectItem>
+                    <SelectItem value="admission">Admission Fee</SelectItem>
+                    <SelectItem value="transport">Transport Fee</SelectItem>
+                    <SelectItem value="other">Other Fee</SelectItem>
+                    <SelectItem value="previous_year">Previous Year Fee</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="remarks">Remarks</Label>
                 <Textarea
                   id="remarks"
@@ -364,6 +389,53 @@ export default function DepositFees() {
           </Card>
         </div>
       )}
+
+      {/* Receipt Dialog */}
+      <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-primary" />
+              Payment Receipt
+            </DialogTitle>
+          </DialogHeader>
+          {lastTransaction && (
+            <ReceiptSlip
+              student={lastTransaction.student}
+              payment={{
+                amount: lastTransaction.amount,
+                payment_method: lastTransaction.payment_method,
+                reference_number: lastTransaction.reference_number,
+                fee_type: lastTransaction.fee_type,
+                transaction_date: lastTransaction.transaction_date
+              }}
+              receiptNumber={`RCP-${lastTransaction.id.slice(0, 8).toUpperCase()}`}
+            />
+          )}
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={() => {
+                setShowReceipt(false);
+                // Reset form after receipt is closed
+                setSelectedStudent(null);
+                setStudentFees(null);
+                setPaymentData({
+                  amount: "",
+                  payerName: "",
+                  paymentMethod: "cash",
+                  referenceNumber: "",
+                  remarks: "",
+                  feeType: "tuition"
+                });
+                setSearchTerm("");
+              }}
+              className="w-full"
+            >
+              Close & Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

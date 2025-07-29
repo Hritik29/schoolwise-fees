@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_fee_structures: {
+        Row: {
+          class_grade: string
+          created_at: string
+          id: string
+          is_active: boolean
+          tuition_fee_yearly: number
+          updated_at: string
+        }
+        Insert: {
+          class_grade: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tuition_fee_yearly: number
+          updated_at?: string
+        }
+        Update: {
+          class_grade?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tuition_fee_yearly?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fee_structures: {
         Row: {
           amount: number
@@ -55,6 +82,7 @@ export type Database = {
           amount: number
           created_at: string
           created_by: string | null
+          fee_type: string | null
           id: string
           payment_method: string
           reference_number: string | null
@@ -68,6 +96,7 @@ export type Database = {
           amount: number
           created_at?: string
           created_by?: string | null
+          fee_type?: string | null
           id?: string
           payment_method?: string
           reference_number?: string | null
@@ -81,6 +110,7 @@ export type Database = {
           amount?: number
           created_at?: string
           created_by?: string | null
+          fee_type?: string | null
           id?: string
           payment_method?: string
           reference_number?: string | null

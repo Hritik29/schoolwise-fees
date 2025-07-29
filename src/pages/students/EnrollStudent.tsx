@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ArrowRight, User, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, User, CreditCard, DollarSign, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 interface StudentData {
   firstName: string;
@@ -38,6 +39,18 @@ export default function EnrollStudent() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const { data: classFees } = useQuery({
+    queryKey: ['class-fees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('class_fee_structures')
+        .select('*')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const [studentData, setStudentData] = useState<StudentData>({
     firstName: "",
@@ -69,7 +82,19 @@ export default function EnrollStudent() {
   const sectionOptions = ["A", "B", "C"];
 
   const handleInputChange = (field: keyof StudentData, value: any) => {
-    setStudentData(prev => ({ ...prev, [field]: value }));
+    setStudentData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-update tuition fees when class changes
+      if (field === 'classGrade' && classFees) {
+        const classData = classFees.find(c => c.class_grade === value);
+        if (classData) {
+          updated.tuitionFees = classData.tuition_fee_yearly;
+        }
+      }
+      
+      return updated;
+    });
   };
 
   const validateStep1 = () => {
@@ -351,14 +376,20 @@ export default function EnrollStudent() {
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="tuitionFees">Tuition Fees (Monthly) *</Label>
-                <Input
-                  id="tuitionFees"
-                  type="number"
-                  value={studentData.tuitionFees}
-                  onChange={(e) => handleInputChange('tuitionFees', Number(e.target.value))}
-                  placeholder="Enter tuition fees"
-                />
+                <Label htmlFor="tuitionFees">Tuition Fees (Yearly) *</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="tuitionFees"
+                    type="number"
+                    value={studentData.tuitionFees}
+                    placeholder="Auto-filled based on class"
+                    className="pl-10 bg-muted cursor-not-allowed"
+                    readOnly
+                    disabled
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Automatically set based on selected class</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="admissionFees">Admission Fees</Label>
@@ -418,37 +449,48 @@ export default function EnrollStudent() {
               </div>
             </div>
 
-            <div className="p-4 bg-secondary rounded-lg">
-              <h3 className="font-semibold mb-2">Fee Summary</h3>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Tuition Fees:</span>
-                  <span>₹{studentData.tuitionFees}</span>
+            <div className="bg-gradient-primary p-6 rounded-xl text-white shadow-elegant">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <GraduationCap className="w-6 h-6" />
                 </div>
-                <div className="flex justify-between">
-                  <span>Admission Fees:</span>
-                  <span>₹{studentData.admissionFees}</span>
+                <h3 className="text-xl font-bold">Fee Summary</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/10 p-3 rounded-lg">
+                    <p className="text-sm opacity-80">Tuition Fees (Yearly)</p>
+                    <p className="text-lg font-bold">₹{studentData.tuitionFees.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg">
+                    <p className="text-sm opacity-80">Admission Fees</p>
+                    <p className="text-lg font-bold">₹{studentData.admissionFees.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg">
+                    <p className="text-sm opacity-80">Transport Fees</p>
+                    <p className="text-lg font-bold">₹{studentData.transportFees.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg">
+                    <p className="text-sm opacity-80">Other Fees</p>
+                    <p className="text-lg font-bold">₹{studentData.otherFees.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg">
+                    <p className="text-sm opacity-80">Previous Year Fees</p>
+                    <p className="text-lg font-bold">₹{studentData.previousYearFees.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-destructive/20 p-3 rounded-lg border border-destructive/30">
+                    <p className="text-sm opacity-80">Discount ({studentData.discount}%)</p>
+                    <p className="text-lg font-bold">-₹{((studentData.tuitionFees + studentData.admissionFees + studentData.transportFees + studentData.otherFees + studentData.previousYearFees) * studentData.discount / 100).toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Transport Fees:</span>
-                  <span>₹{studentData.transportFees}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Other Fees:</span>
-                  <span>₹{studentData.otherFees}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Previous Year Fees:</span>
-                  <span>₹{studentData.previousYearFees}</span>
-                </div>
-                <div className="flex justify-between text-destructive">
-                  <span>Discount ({studentData.discount}%):</span>
-                  <span>-₹{((studentData.tuitionFees + studentData.admissionFees + studentData.transportFees + studentData.otherFees + studentData.previousYearFees) * studentData.discount / 100).toFixed(2)}</span>
-                </div>
-                <hr className="my-2" />
-                <div className="flex justify-between font-semibold">
-                  <span>Total Amount:</span>
-                  <span>₹{calculateTotalFees()}</span>
+                <div className="border-t border-white/20 pt-3">
+                  <div className="flex items-center justify-between bg-white/20 p-4 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      <span className="text-lg font-medium">Total Amount:</span>
+                    </div>
+                    <span className="text-2xl font-bold">₹{calculateTotalFees().toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>

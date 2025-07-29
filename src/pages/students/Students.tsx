@@ -4,14 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Search, Eye, Edit, Filter } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { UserPlus, Search, Eye, Edit, Filter, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { exportStudentsToExcel } from "@/utils/exportToExcel";
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: students, isLoading } = useQuery({
     queryKey: ['students', searchTerm],
@@ -40,6 +45,43 @@ export default function Students() {
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const handleExportToExcel = () => {
+    if (!students || students.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No student data available to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = exportStudentsToExcel(students);
+    if (success) {
+      toast({
+        title: "Success!",
+        description: "Student data exported to Excel successfully"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to export data to Excel",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewStudent = (student: any) => {
+    setSelectedStudent(student);
+  };
+
+  const handleEditStudent = (student: any) => {
+    // TODO: Implement edit functionality
+    toast({
+      title: "Coming Soon",
+      description: "Edit functionality will be implemented soon"
+    });
   };
 
   return (
@@ -74,6 +116,10 @@ export default function Students() {
             <Button variant="outline" size="sm">
               <Filter className="w-4 h-4 mr-2" />
               Filter
+            </Button>
+            <Button onClick={handleExportToExcel} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export to Excel
             </Button>
           </div>
 
@@ -118,10 +164,82 @@ export default function Students() {
                       <TableCell>{new Date(student.enrollment_date).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewStudent(student)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Student Details</DialogTitle>
+                                <DialogDescription>
+                                  Complete information for {selectedStudent?.first_name} {selectedStudent?.last_name}
+                                </DialogDescription>
+                              </DialogHeader>
+                              {selectedStudent && (
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <div className="space-y-3">
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                                      <p className="font-medium">{selectedStudent.first_name} {selectedStudent.last_name}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Scholar Number</label>
+                                      <p className="font-medium">{selectedStudent.student_id}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Class & Section</label>
+                                      <p className="font-medium">{selectedStudent.class_grade} - {selectedStudent.section}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Date of Birth</label>
+                                      <p className="font-medium">{selectedStudent.date_of_birth ? new Date(selectedStudent.date_of_birth).toLocaleDateString() : 'Not provided'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Status</label>
+                                      <div className="mt-1">{getStatusBadge(selectedStudent.status)}</div>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3">
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Parent Name</label>
+                                      <p className="font-medium">{selectedStudent.parent_name}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Parent Phone</label>
+                                      <p className="font-medium">{selectedStudent.parent_phone}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Parent Email</label>
+                                      <p className="font-medium">{selectedStudent.parent_email || 'Not provided'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Student Email</label>
+                                      <p className="font-medium">{selectedStudent.email || 'Not provided'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Address</label>
+                                      <p className="font-medium">{selectedStudent.address || 'Not provided'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium text-muted-foreground">Enrollment Date</label>
+                                      <p className="font-medium">{new Date(selectedStudent.enrollment_date).toLocaleDateString()}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditStudent(student)}
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                         </div>

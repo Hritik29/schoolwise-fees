@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Eye, FileText } from "lucide-react";
+import { Search, Filter, Eye, FileText, Download, PrinterIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { exportFeesDataToExcel } from "@/utils/exportToExcel";
 
 interface StudentFeeData {
   id: string;
@@ -44,15 +46,16 @@ export default function StudentFeesData() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState<StudentFeeData | null>(null);
+  const { toast } = useToast();
 
-  const { data: feesData, isLoading } = useQuery({
+  const { data: feesData, isLoading, refetch } = useQuery({
     queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter],
     queryFn: async () => {
       let query = supabase
         .from('student_fees')
         .select(`
           *,
-          students (
+          students!inner (
             first_name,
             last_name,
             student_id,
@@ -64,8 +67,46 @@ export default function StudentFeesData() {
         `)
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        query = query.or(`students.first_name.ilike.%${searchTerm}%,students.last_name.ilike.%${searchTerm}%,students.student_id.ilike.%${searchTerm}%`);
+      if (searchTerm && searchTerm.trim() !== "") {
+        // Use proper filtering with the nested relationship
+        const { data: allData, error: allError } = await supabase
+          .from('student_fees')
+          .select(`
+            *,
+            students!inner (
+              first_name,
+              last_name,
+              student_id,
+              class_grade,
+              section,
+              parent_name,
+              parent_phone
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (allError) throw allError;
+
+        const filteredData = allData.filter((record: any) => {
+          const searchLower = searchTerm.toLowerCase();
+          return (
+            record.students.first_name.toLowerCase().includes(searchLower) ||
+            record.students.last_name.toLowerCase().includes(searchLower) ||
+            record.students.student_id.toLowerCase().includes(searchLower)
+          );
+        });
+
+        let result = filteredData;
+
+        if (statusFilter !== "all") {
+          result = result.filter((record: any) => record.status === statusFilter);
+        }
+
+        if (classFilter !== "all") {
+          result = result.filter((record: any) => record.students.class_grade === classFilter);
+        }
+
+        return result as StudentFeeData[];
       }
 
       if (statusFilter !== "all") {
@@ -113,6 +154,35 @@ export default function StudentFeesData() {
   };
 
   const classes = Array.from(new Set(feesData?.map(f => f.students.class_grade) || []));
+
+  const handleExportToExcel = () => {
+    if (!feesData || feesData.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No fee data available to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = exportFeesDataToExcel(feesData);
+    if (success) {
+      toast({
+        title: "Success!",
+        description: "Fee data exported to Excel successfully"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to export data to Excel",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePrintLedger = () => {
+    window.print();
+  };
 
   return (
     <div className="space-y-6">
@@ -165,6 +235,10 @@ export default function StudentFeesData() {
             <Button variant="outline" size="sm">
               <Filter className="w-4 h-4 mr-2" />
               More Filters
+            </Button>
+            <Button onClick={handleExportToExcel} variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export to Excel
             </Button>
           </div>
 
@@ -276,7 +350,18 @@ export default function StudentFeesData() {
 
                                 <Card>
                                   <CardHeader>
-                                    <CardTitle className="text-lg">Transaction History</CardTitle>
+                                    <CardTitle className="text-lg flex items-center justify-between">
+                                      Transaction History
+                                      <Button 
+                                        onClick={handlePrintLedger} 
+                                        variant="outline" 
+                                        size="sm"
+                                        className="print:hidden"
+                                      >
+                                        <PrinterIcon className="w-4 h-4 mr-2" />
+                                        Print Ledger
+                                      </Button>
+                                    </CardTitle>
                                   </CardHeader>
                                   <CardContent>
                                     {transactions && transactions.length > 0 ? (
