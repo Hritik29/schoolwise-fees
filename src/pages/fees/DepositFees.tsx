@@ -120,12 +120,24 @@ export default function DepositFees() {
           reference_number: paymentData.referenceNumber,
           remarks: paymentData.remarks,
           created_by: paymentData.payerName,
-          fee_type: paymentData.feeType
+          fee_type: paymentData.feeType,
+          applied_to_fee_type: paymentData.feeType
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Update student fees manually to avoid doubling issue
+      const { error: updateError } = await supabase
+        .from('student_fees')
+        .update({
+          paid_amount: studentFees.paid_amount + amount,
+          outstanding_amount: studentFees.outstanding_amount - amount
+        })
+        .eq('id', studentFees.id);
+
+      if (updateError) throw updateError;
 
       // Prepare receipt data
       setLastTransaction({
@@ -245,20 +257,26 @@ export default function DepositFees() {
               </div>
 
               {studentFees && (
-                <div className="pt-4 border-t">
-                  <h3 className="font-semibold mb-3">Fee Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Total Fees:</span>
-                      <span className="font-medium">₹{studentFees.total_amount}</span>
+                <div className="pt-4 border-t border-border">
+                  <h3 className="font-semibold mb-3 text-foreground">Fee Summary</h3>
+                  <div className="space-y-3">
+                    <div className="bg-card p-3 rounded-lg border border-border">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Fees:</span>
+                        <span className="font-medium text-foreground">₹{studentFees.total_amount}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-success">
-                      <span>Paid Amount:</span>
-                      <span className="font-medium">₹{studentFees.paid_amount}</span>
+                    <div className="bg-success/10 p-3 rounded-lg border border-success/20">
+                      <div className="flex justify-between">
+                        <span className="text-success-foreground">Paid Amount:</span>
+                        <span className="font-medium text-success">₹{studentFees.paid_amount}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-destructive">
-                      <span>Outstanding:</span>
-                      <span className="font-medium">₹{studentFees.outstanding_amount}</span>
+                    <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20">
+                      <div className="flex justify-between">
+                        <span className="text-destructive-foreground">Outstanding:</span>
+                        <span className="font-medium text-destructive">₹{studentFees.outstanding_amount}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

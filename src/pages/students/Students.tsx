@@ -138,7 +138,7 @@ export default function Students() {
                     <TableHead>Section</TableHead>
                     <TableHead>Parent Contact</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Enrollment Date</TableHead>
+                    <TableHead>Date of Birth</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -161,7 +161,7 @@ export default function Students() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(student.status)}</TableCell>
-                      <TableCell>{new Date(student.enrollment_date).toLocaleDateString()}</TableCell>
+                      <TableCell>{student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString() : 'Not provided'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Dialog>
@@ -226,12 +226,28 @@ export default function Students() {
                                       <label className="text-sm font-medium text-muted-foreground">Address</label>
                                       <p className="font-medium">{selectedStudent.address || 'Not provided'}</p>
                                     </div>
-                                    <div>
-                                      <label className="text-sm font-medium text-muted-foreground">Enrollment Date</label>
-                                      <p className="font-medium">{new Date(selectedStudent.enrollment_date).toLocaleDateString()}</p>
-                                    </div>
-                                  </div>
-                                </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Enrollment Date</label>
+                                       <p className="font-medium">{new Date(selectedStudent.enrollment_date).toLocaleDateString()}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Aadhar Number</label>
+                                       <p className="font-medium">{selectedStudent.aadhar_number || 'Not provided'}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">SSSM ID</label>
+                                       <p className="font-medium">{selectedStudent.sssm_id || 'Not provided'}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Apar ID</label>
+                                       <p className="font-medium">{selectedStudent.apar_id || 'Not provided'}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Account Number</label>
+                                       <p className="font-medium">{selectedStudent.account_number || 'Not provided'}</p>
+                                     </div>
+                                   </div>
+                                 </div>
                               )}
                             </DialogContent>
                           </Dialog>

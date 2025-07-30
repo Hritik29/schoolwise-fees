@@ -80,8 +80,10 @@ export type Database = {
       fee_transactions: {
         Row: {
           amount: number
+          applied_to_fee_type: string | null
           created_at: string
           created_by: string | null
+          fee_category: string | null
           fee_type: string | null
           id: string
           payment_method: string
@@ -94,8 +96,10 @@ export type Database = {
         }
         Insert: {
           amount: number
+          applied_to_fee_type?: string | null
           created_at?: string
           created_by?: string | null
+          fee_category?: string | null
           fee_type?: string | null
           id?: string
           payment_method?: string
@@ -108,8 +112,10 @@ export type Database = {
         }
         Update: {
           amount?: number
+          applied_to_fee_type?: string | null
           created_at?: string
           created_by?: string | null
+          fee_category?: string | null
           fee_type?: string | null
           id?: string
           payment_method?: string
@@ -136,6 +142,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_fee_details: {
+        Row: {
+          academic_year: string | null
+          created_at: string
+          fee_type: string
+          id: string
+          outstanding_amount: number
+          paid_amount: number
+          student_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string
+          fee_type: string
+          id?: string
+          outstanding_amount?: number
+          paid_amount?: number
+          student_id: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string
+          fee_type?: string
+          id?: string
+          outstanding_amount?: number
+          paid_amount?: number
+          student_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       student_fees: {
         Row: {
@@ -193,7 +235,10 @@ export type Database = {
       }
       students: {
         Row: {
+          aadhar_number: string | null
+          account_number: string | null
           address: string | null
+          apar_id: string | null
           class_grade: string
           created_at: string
           date_of_birth: string | null
@@ -207,12 +252,16 @@ export type Database = {
           parent_phone: string
           phone: string | null
           section: string | null
+          sssm_id: string | null
           status: string
           student_id: string
           updated_at: string
         }
         Insert: {
+          aadhar_number?: string | null
+          account_number?: string | null
           address?: string | null
+          apar_id?: string | null
           class_grade: string
           created_at?: string
           date_of_birth?: string | null
@@ -226,12 +275,16 @@ export type Database = {
           parent_phone: string
           phone?: string | null
           section?: string | null
+          sssm_id?: string | null
           status?: string
           student_id: string
           updated_at?: string
         }
         Update: {
+          aadhar_number?: string | null
+          account_number?: string | null
           address?: string | null
+          apar_id?: string | null
           class_grade?: string
           created_at?: string
           date_of_birth?: string | null
@@ -245,6 +298,7 @@ export type Database = {
           parent_phone?: string
           phone?: string | null
           section?: string | null
+          sssm_id?: string | null
           status?: string
           student_id?: string
           updated_at?: string

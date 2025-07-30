@@ -32,6 +32,10 @@ interface StudentData {
   otherFees: number;
   previousYearFees: number;
   discount: number;
+  aadharNumber: string;
+  sssmId: string;
+  aparId: string;
+  accountNumber: string;
 }
 
 export default function EnrollStudent() {
@@ -71,7 +75,11 @@ export default function EnrollStudent() {
     transportFees: 0,
     otherFees: 0,
     previousYearFees: 0,
-    discount: 0
+    discount: 0,
+    aadharNumber: "",
+    sssmId: "",
+    aparId: "",
+    accountNumber: ""
   });
 
   const classOptions = [
@@ -98,15 +106,20 @@ export default function EnrollStudent() {
   };
 
   const validateStep1 = () => {
-    const required = ['firstName', 'fatherName', 'phone', 'scholarNumber', 'rollNumber', 'classGrade', 'section'];
-    return required.every(field => studentData[field as keyof StudentData]);
+    const required = ['firstName', 'fatherName', 'phone', 'scholarNumber', 'rollNumber', 'classGrade', 'section', 'aadharNumber', 'sssmId', 'aparId', 'accountNumber'];
+    const basicValidation = required.every(field => studentData[field as keyof StudentData]);
+    const aadharValid = studentData.aadharNumber.length === 12;
+    const accountValid = studentData.accountNumber.length > 0;
+    return basicValidation && aadharValid && accountValid;
   };
 
   const calculateTotalFees = () => {
     const { tuitionFees, admissionFees, transportFees, otherFees, previousYearFees, discount } = studentData;
-    const total = tuitionFees + admissionFees + transportFees + otherFees + previousYearFees;
-    const discountAmount = (total * discount) / 100;
-    return total - discountAmount;
+    // Discount applies only to tuition fees
+    const discountAmount = (tuitionFees * discount) / 100;
+    const discountedTuitionFees = tuitionFees - discountAmount;
+    const total = discountedTuitionFees + admissionFees + transportFees + otherFees + previousYearFees;
+    return total;
   };
 
   const handleSubmit = async () => {
@@ -128,7 +141,11 @@ export default function EnrollStudent() {
           email: studentData.email,
           address: studentData.address,
           date_of_birth: studentData.dateOfBirth || null,
-          status: studentData.isActive ? 'active' : 'inactive'
+          status: studentData.isActive ? 'active' : 'inactive',
+          aadhar_number: studentData.aadharNumber,
+          sssm_id: studentData.sssmId,
+          apar_id: studentData.aparId,
+          account_number: studentData.accountNumber
         })
         .select()
         .single();
@@ -322,6 +339,52 @@ export default function EnrollStudent() {
                   onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="aadharNumber">Aadhar Number *</Label>
+                <Input
+                  id="aadharNumber"
+                  value={studentData.aadharNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                    handleInputChange('aadharNumber', value);
+                  }}
+                  placeholder="Enter 12-digit Aadhar number"
+                  maxLength={12}
+                />
+                {studentData.aadharNumber && studentData.aadharNumber.length !== 12 && (
+                  <p className="text-xs text-destructive">Aadhar number must be exactly 12 digits</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sssmId">SSSM ID *</Label>
+                <Input
+                  id="sssmId"
+                  value={studentData.sssmId}
+                  onChange={(e) => handleInputChange('sssmId', e.target.value)}
+                  placeholder="Enter SSSM ID"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="aparId">Apar ID *</Label>
+                <Input
+                  id="aparId"
+                  value={studentData.aparId}
+                  onChange={(e) => handleInputChange('aparId', e.target.value)}
+                  placeholder="Enter Apar ID"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber">Account Number *</Label>
+                <Input
+                  id="accountNumber"
+                  value={studentData.accountNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    handleInputChange('accountNumber', value);
+                  }}
+                  placeholder="Enter bank account number"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -479,8 +542,8 @@ export default function EnrollStudent() {
                     <p className="text-lg font-bold">₹{studentData.previousYearFees.toLocaleString()}</p>
                   </div>
                   <div className="bg-destructive/20 p-3 rounded-lg border border-destructive/30">
-                    <p className="text-sm opacity-80">Discount ({studentData.discount}%)</p>
-                    <p className="text-lg font-bold">-₹{((studentData.tuitionFees + studentData.admissionFees + studentData.transportFees + studentData.otherFees + studentData.previousYearFees) * studentData.discount / 100).toLocaleString()}</p>
+                    <p className="text-sm opacity-80">Discount ({studentData.discount}%) - Applied to Tuition Only</p>
+                    <p className="text-lg font-bold">-₹{(studentData.tuitionFees * studentData.discount / 100).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="border-t border-white/20 pt-3">
