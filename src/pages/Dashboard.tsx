@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, DollarSign, AlertTriangle, TrendingUp, GraduationCap, CreditCard } from "lucide-react";
+import { Users, DollarSign, AlertTriangle, TrendingUp, GraduationCap, CreditCard, Eye, BarChart3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -88,67 +88,158 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your school fees management system
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Super-Vision Dashboard</h1>
+          <p className="text-muted-foreground">
+            Complete school management overview
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-medium text-muted-foreground">Academic Year 2024-25</p>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Statistics Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card, index) => (
-          <Card key={index} className="shadow-soft hover:shadow-medium transition-all duration-200">
+          <Card key={index} className="relative overflow-hidden border-l-4 border-l-primary shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
+              <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
+              <div className={`p-2 rounded-lg ${card.color === 'text-primary' ? 'bg-primary/10' : 
+                card.color === 'text-accent' ? 'bg-accent/10' : 
+                card.color === 'text-success' ? 'bg-success/10' : 
+                card.color === 'text-destructive' ? 'bg-destructive/10' : 
+                card.color === 'text-warning' ? 'bg-warning/10' : 'bg-info/10'}`}>
+                <card.icon className={`h-5 w-5 ${card.color}`} />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-xs text-muted-foreground">{card.description}</p>
+              <div className="text-2xl font-bold text-foreground">{card.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="shadow-soft">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks</CardDescription>
+      {/* Action Cards */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Deposit Fees Card */}
+        <Card className="relative overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-success/10 rounded-lg">
+                <CreditCard className="h-6 w-6 text-success" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Deposit Fees</CardTitle>
+                <CardDescription>Collect student fee installments</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <a href="/students/enroll" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors">
-              <Users className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-medium">Enroll New Student</p>
-                <p className="text-sm text-muted-foreground">Add a new student to the system</p>
-              </div>
-            </a>
-            <a href="/fees/deposit" className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary transition-colors">
-              <CreditCard className="h-5 w-5 text-accent" />
-              <div>
-                <p className="font-medium">Deposit Fees</p>
-                <p className="text-sm text-muted-foreground">Record fee payments</p>
-              </div>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">₹{(stats?.monthlyCollection || 0).toLocaleString()} collected this month</p>
+            <a 
+              href="/fees/deposit" 
+              className="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-success text-success-foreground rounded-lg hover:bg-success/90 transition-colors font-medium"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Collect Now
             </a>
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest transactions and enrollments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-2 h-2 bg-success rounded-full"></div>
-                <span className="text-muted-foreground">Latest updates will appear here</span>
+        {/* Student Fee Data Card */}
+        <Card className="relative overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Student Fee Data</CardTitle>
+                <CardDescription>View individual student ledgers</CardDescription>
               </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">{stats?.totalStudents || 0} students tracked</p>
+            <a 
+              href="/fees/data" 
+              className="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Open Ledger
+            </a>
+          </CardContent>
+        </Card>
+
+        {/* Remaining Fees Card */}
+        <Card className="relative overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-warning/10 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-warning" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Remaining Fees</CardTitle>
+                <CardDescription>Identify fee defaulters</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">45 students with pending dues</p>
+            <a 
+              href="/fees/remaining" 
+              className="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-warning text-warning-foreground rounded-lg hover:bg-warning/90 transition-colors font-medium"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              View Details
+            </a>
+          </CardContent>
+        </Card>
+
+        {/* Data Insights Card */}
+        <Card className="relative overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-accent/10 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Data Insights</CardTitle>
+                <CardDescription>Financial metrics & reports</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">{(stats?.collectionRate || 0).toFixed(1)}% collection rate</p>
+            <a 
+              href="/fees/insights" 
+              className="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors font-medium"
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              View Analytics
+            </a>
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Fee Collections */}
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Fee Collections</CardTitle>
+          <CardDescription>Latest payment transactions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-sm p-3 bg-muted/50 rounded-lg">
+              <div className="w-2 h-2 bg-success rounded-full"></div>
+              <span className="text-muted-foreground">Payment history will appear here as transactions are recorded</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

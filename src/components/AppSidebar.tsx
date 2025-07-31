@@ -9,7 +9,10 @@ import {
   Wallet,
   BarChart3,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Settings,
+  LogOut,
+  User
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -22,6 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -30,16 +34,16 @@ const menuItems = [
   {
     title: "Students",
     items: [
-      { title: "Enroll Student", url: "/students/enroll", icon: UserPlus },
+      { title: "Add / Enroll Student", url: "/students/enroll", icon: UserPlus },
       { title: "View All Students", url: "/students", icon: Users },
       { title: "Transfer Certificate", url: "/students/transfer", icon: FileText },
     ]
   },
   {
-    title: "Fees Management", 
+    title: "Fee Management", 
     items: [
       { title: "Deposit Fees", url: "/fees/deposit", icon: Wallet },
-      { title: "Student Fees Data", url: "/fees/data", icon: Eye },
+      { title: "Student Fee Data", url: "/fees/data", icon: Eye },
       { title: "Remaining Fees", url: "/fees/remaining", icon: AlertTriangle },
       { title: "Data Insights", url: "/fees/insights", icon: TrendingUp },
     ]
@@ -54,66 +58,109 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-primary text-primary-foreground font-medium" 
-      : "hover:bg-secondary text-foreground";
+      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium rounded-lg" 
+      : "hover:bg-sidebar-accent text-sidebar-foreground rounded-lg transition-colors";
 
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarContent>
-        <div className="p-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary-foreground" />
+    <Sidebar 
+      className={`${isCollapsed ? "w-16" : "w-64"} bg-sidebar border-sidebar-border`} 
+      collapsible="icon"
+    >
+      <SidebarContent className="bg-sidebar">
+        {/* Header */}
+        <div className="p-4 border-b border-sidebar-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="w-5 h-5 text-white" />
             </div>
             {!isCollapsed && (
               <div>
-                <h2 className="font-bold text-lg">SchoolWise</h2>
-                <p className="text-xs text-muted-foreground">Fee Management</p>
+                <h2 className="font-bold text-lg text-sidebar-foreground">Super-Vision</h2>
+                <p className="text-xs text-sidebar-muted-foreground">Management System</p>
               </div>
             )}
           </div>
         </div>
 
-        {menuItems.map((item, index) => (
-          <SidebarGroup key={index}>
-            {item.title && !item.items && (
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url || "/"} className={getNavCls}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+        {/* Navigation Menu */}
+        <div className="flex-1 py-4">
+          {menuItems.map((item, index) => (
+            <SidebarGroup key={index} className="px-3 mb-2">
+              {item.title && !item.items && (
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink to={item.url || "/"} className={getNavCls}>
+                        <item.icon className="mr-3 h-5 w-5" />
+                        {!isCollapsed && <span className="text-sm">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              )}
+              
+              {item.items && (
+                <>
+                  {!isCollapsed && (
+                    <SidebarGroupLabel className="text-sidebar-muted-foreground text-xs font-medium mb-2">
+                      {item.title}
+                    </SidebarGroupLabel>
+                  )}
+                  <SidebarGroupContent>
+                    <SidebarMenu className="space-y-1">
+                      {item.items.map((subItem) => (
+                        <SidebarMenuItem key={subItem.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink to={subItem.url} className={getNavCls}>
+                              <subItem.icon className="mr-3 h-5 w-5" />
+                              {!isCollapsed && <span className="text-sm">{subItem.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </>
+              )}
+            </SidebarGroup>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <SidebarFooter className="border-t border-sidebar-border bg-sidebar">
+          <div className="p-3">
+            {!isCollapsed ? (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-sm font-medium">A</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground">admin</p>
+                  <p className="text-xs text-sidebar-muted-foreground truncate">admin@school.edu</p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mx-auto">
+                <span className="text-primary-foreground text-sm font-medium">A</span>
+              </div>
             )}
             
-            {item.items && (
-              <>
-                <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
-                  {item.title}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {item.items.map((subItem) => (
-                      <SidebarMenuItem key={subItem.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink to={subItem.url} className={getNavCls}>
-                            <subItem.icon className="mr-2 h-4 w-4" />
-                            {!isCollapsed && <span>{subItem.title}</span>}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </>
+            {!isCollapsed && (
+              <div className="mt-2 flex gap-2">
+                <button className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-xs">Settings</span>
+                </button>
+                <button className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors">
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-xs">Logout</span>
+                </button>
+              </div>
             )}
-          </SidebarGroup>
-        ))}
+          </div>
+        </SidebarFooter>
       </SidebarContent>
     </Sidebar>
   );
