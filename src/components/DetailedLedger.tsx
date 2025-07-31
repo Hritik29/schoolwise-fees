@@ -68,9 +68,31 @@ export default function DetailedLedger({ studentId, studentInfo }: DetailedLedge
     return <Badge variant="outline">Pending</Badge>;
   };
 
-  const totalFees = feeDetails?.reduce((sum, fee) => sum + fee.total_amount, 0) || 0;
-  const totalPaid = feeDetails?.reduce((sum, fee) => sum + fee.paid_amount, 0) || 0;
-  const totalOutstanding = feeDetails?.reduce((sum, fee) => sum + fee.outstanding_amount, 0) || 0;
+  // Define all fee types that should always be displayed
+  const allFeeTypes = [
+    { type: 'tuition', label: 'Tuition Fees' },
+    { type: 'transport', label: 'Transport' },
+    { type: 'admission', label: 'Admission Fee' },
+    { type: 'other', label: 'Other Fees' },
+    { type: 'previous_year', label: 'Previous Year Fee' }
+  ];
+
+  // Create a complete fee breakdown with all fee types
+  const completeFeeBreakdown = allFeeTypes.map(feeType => {
+    const existingFee = feeDetails?.find(fee => fee.fee_type === feeType.type);
+    return {
+      fee_type: feeType.type,
+      label: feeType.label,
+      total_amount: existingFee?.total_amount || 0,
+      paid_amount: existingFee?.paid_amount || 0,
+      outstanding_amount: existingFee?.outstanding_amount || 0,
+      id: existingFee?.id || `${feeType.type}-placeholder`
+    };
+  });
+
+  const totalFees = completeFeeBreakdown.reduce((sum, fee) => sum + fee.total_amount, 0);
+  const totalPaid = completeFeeBreakdown.reduce((sum, fee) => sum + fee.paid_amount, 0);
+  const totalOutstanding = completeFeeBreakdown.reduce((sum, fee) => sum + fee.outstanding_amount, 0);
 
   return (
     <div className="space-y-6">
@@ -116,46 +138,39 @@ export default function DetailedLedger({ studentId, studentInfo }: DetailedLedge
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {feeDetails && feeDetails.length > 0 ? (
-              feeDetails.map((fee) => {
-                const colors = feeTypeColors[fee.fee_type as keyof typeof feeTypeColors] || feeTypeColors.other;
-                return (
-                  <div key={fee.id} className={`p-4 rounded-lg border ${colors.bg} ${colors.border}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className={`font-semibold ${colors.text} capitalize`}>
-                          {fee.fee_type.replace('_', ' ')} Fee
-                        </h3>
-                        {getStatusBadge(fee.outstanding_amount)}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-foreground">₹{fee.total_amount.toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Total Amount</p>
-                      </div>
+            {completeFeeBreakdown.map((fee) => {
+              const colors = feeTypeColors[fee.fee_type as keyof typeof feeTypeColors] || feeTypeColors.other;
+              return (
+                <div key={fee.id} className={`p-4 rounded-lg border ${colors.bg} ${colors.border}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <h3 className={`font-semibold ${colors.text}`}>
+                        {fee.label}
+                      </h3>
+                      {getStatusBadge(fee.outstanding_amount)}
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Total Amount</p>
-                        <p className="font-medium">₹{fee.total_amount.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-success">Paid Amount</p>
-                        <p className="font-medium text-success">₹{fee.paid_amount.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-destructive">Outstanding</p>
-                        <p className="font-medium text-destructive">₹{fee.outstanding_amount.toLocaleString()}</p>
-                      </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-foreground">₹{fee.total_amount.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">Total Amount</p>
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No detailed fee breakdown available</p>
-                <p className="text-sm text-muted-foreground">Fee details will be created when payments are recorded</p>
-              </div>
-            )}
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Total Amount</p>
+                      <p className="font-medium">₹{fee.total_amount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-success">Paid Amount</p>
+                      <p className="font-medium text-success">₹{fee.paid_amount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-destructive">Outstanding</p>
+                      <p className="font-medium text-destructive">₹{fee.outstanding_amount.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           
           {/* Summary Totals */}
