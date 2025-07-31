@@ -77,11 +77,7 @@ export default function Students() {
   };
 
   const handleEditStudent = (student: any) => {
-    // TODO: Implement edit functionality
-    toast({
-      title: "Coming Soon",
-      description: "Edit functionality will be implemented soon"
-    });
+    navigate(`/students/edit/${student.id}`);
   };
 
   return (

@@ -7,6 +7,7 @@ import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/students/Students";
 import EnrollStudent from "./pages/students/EnrollStudent";
+import EditStudent from "./pages/students/EditStudent";
 import TransferCertificate from "./pages/students/TransferCertificate";
 import DepositFees from "./pages/fees/DepositFees";
 import StudentFeesData from "./pages/fees/StudentFeesData";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/students/enroll" element={<EnrollStudent />} />
+            <Route path="/students/edit/:id" element={<EditStudent />} />
             <Route path="/students/transfer" element={<TransferCertificate />} />
             <Route path="/fees/deposit" element={<DepositFees />} />
             <Route path="/fees/data" element={<StudentFeesData />} />

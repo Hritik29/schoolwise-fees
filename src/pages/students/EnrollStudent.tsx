@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ArrowRight, User, CreditCard, DollarSign, GraduationCap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -187,7 +188,33 @@ export default function EnrollStudent() {
         description: "Student enrolled successfully.",
       });
 
-      navigate('/students');
+      // Reset form and go back to step 1 for next enrollment
+      setStudentData({
+        firstName: "",
+        fatherName: "",
+        motherName: "",
+        phone: "",
+        scholarNumber: "",
+        rollNumber: "",
+        classGrade: "",
+        section: "",
+        email: "",
+        address: "",
+        dateOfBirth: "",
+        isActive: true,
+        useTransport: false,
+        tuitionFees: 2000,
+        admissionFees: 0,
+        transportFees: 0,
+        otherFees: 0,
+        previousYearFees: 0,
+        discount: 0,
+        aadharNumber: "",
+        sssmId: "",
+        aparId: "",
+        accountNumber: ""
+      });
+      setCurrentStep(1);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -512,47 +539,50 @@ export default function EnrollStudent() {
               </div>
             </div>
 
-            <div className="bg-gradient-primary p-6 rounded-xl text-white shadow-elegant">
+            <div className="bg-card border rounded-xl p-6 shadow-soft">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <GraduationCap className="w-6 h-6" />
+                <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                  <GraduationCap className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold">Fee Summary</h3>
+                <h3 className="text-xl font-bold text-foreground">Fee Summary</h3>
               </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Tuition Fees (Yearly)</p>
-                    <p className="text-lg font-bold">₹{studentData.tuitionFees.toLocaleString()}</p>
+                  <div className="bg-primary/5 p-3 rounded-lg border border-primary/20">
+                    <p className="text-sm text-muted-foreground">Tuition Fees (Yearly)</p>
+                    <p className="text-lg font-bold text-foreground">₹{studentData.tuitionFees.toLocaleString()}</p>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Admission Fees</p>
-                    <p className="text-lg font-bold">₹{studentData.admissionFees.toLocaleString()}</p>
+                  <div className="bg-accent/5 p-3 rounded-lg border border-accent/20">
+                    <p className="text-sm text-muted-foreground">Admission Fees</p>
+                    <p className="text-lg font-bold text-foreground">₹{studentData.admissionFees.toLocaleString()}</p>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Transport Fees</p>
-                    <p className="text-lg font-bold">₹{studentData.transportFees.toLocaleString()}</p>
+                  <div className="bg-warning/5 p-3 rounded-lg border border-warning/20">
+                    <p className="text-sm text-muted-foreground">Transport Fees</p>
+                    <p className="text-lg font-bold text-foreground">₹{studentData.transportFees.toLocaleString()}</p>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Other Fees</p>
-                    <p className="text-lg font-bold">₹{studentData.otherFees.toLocaleString()}</p>
+                  <div className="bg-secondary/10 p-3 rounded-lg border border-secondary/20">
+                    <p className="text-sm text-muted-foreground">Other Fees</p>
+                    <p className="text-lg font-bold text-foreground">₹{studentData.otherFees.toLocaleString()}</p>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-lg">
-                    <p className="text-sm opacity-80">Previous Year Fees</p>
-                    <p className="text-lg font-bold">₹{studentData.previousYearFees.toLocaleString()}</p>
+                  <div className="bg-muted p-3 rounded-lg border">
+                    <p className="text-sm text-muted-foreground">Previous Year Fees</p>
+                    <p className="text-lg font-bold text-foreground">₹{studentData.previousYearFees.toLocaleString()}</p>
                   </div>
-                  <div className="bg-destructive/20 p-3 rounded-lg border border-destructive/30">
-                    <p className="text-sm opacity-80">Discount ({studentData.discount}%) - Applied to Tuition Only</p>
-                    <p className="text-lg font-bold">-₹{(studentData.tuitionFees * studentData.discount / 100).toLocaleString()}</p>
+                  <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/30">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className="bg-destructive text-destructive-foreground text-xs">DISCOUNT</Badge>
+                      <span className="text-xs text-muted-foreground">({studentData.discount}% on Tuition)</span>
+                    </div>
+                    <p className="text-lg font-bold text-destructive">-₹{(studentData.tuitionFees * studentData.discount / 100).toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="border-t border-white/20 pt-3">
-                  <div className="flex items-center justify-between bg-white/20 p-4 rounded-lg">
+                <div className="border-t pt-3">
+                  <div className="flex items-center justify-between bg-success/10 p-4 rounded-lg border border-success/20">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5" />
-                      <span className="text-lg font-medium">Total Amount:</span>
+                      <DollarSign className="w-5 h-5 text-success" />
+                      <span className="text-lg font-medium text-foreground">Total Amount:</span>
                     </div>
-                    <span className="text-2xl font-bold">₹{calculateTotalFees().toLocaleString()}</span>
+                    <span className="text-2xl font-bold text-success">₹{calculateTotalFees().toLocaleString()}</span>
                   </div>
                 </div>
               </div>
