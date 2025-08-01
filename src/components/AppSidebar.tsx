@@ -34,17 +34,17 @@ const menuItems = [
   {
     title: "Students",
     items: [
-      { title: "Enroll Student", url: "/students/enroll", icon: UserPlus },
+      { title: "Enroll", url: "/students/enroll", icon: UserPlus },
       { title: "View All Students", url: "/students", icon: Users },
       { title: "Transfer Certificate", url: "/students/transfer", icon: FileText },
     ]
   },
   {
-    title: "Fee Management", 
+    title: "Fees Management", 
     items: [
       { title: "Deposit Fees", url: "/fees/deposit", icon: Wallet },
       { title: "Student Fee Data", url: "/fees/data", icon: Eye },
-      { title: "Remaining Fees", url: "/fees/remaining", icon: AlertTriangle },
+      { title: "Remaining Data", url: "/fees/remaining", icon: AlertTriangle },
       { title: "Data Insights", url: "/fees/insights", icon: TrendingUp },
     ]
   },
