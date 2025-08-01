@@ -84,7 +84,7 @@ export default function EnrollStudent() {
   });
 
   const classOptions = [
-    "Nursery", "LKG", "UKG", "1st", "2nd", "3rd", "4th", "5th", 
+    "Nur.", "L.K.G.", "U.K.G.", "1st", "2nd", "3rd", "4th", "5th", 
     "6th", "7th", "8th", "9th", "10th", "11th", "12th"
   ];
 
@@ -153,14 +153,40 @@ export default function EnrollStudent() {
 
       if (studentError) throw studentError;
 
-      // Create fee structure if needed
+      // Create detailed fee records for each fee type
+      const feeTypes = [
+        { type: 'tuition', amount: studentData.tuitionFees },
+        { type: 'admission', amount: studentData.admissionFees },
+        { type: 'transport', amount: studentData.transportFees },
+        { type: 'other', amount: studentData.otherFees },
+        { type: 'previous_year', amount: studentData.previousYearFees }
+      ];
+
+      // Create student_fee_details records for each fee type
+      for (const fee of feeTypes) {
+        const discountAmount = fee.type === 'tuition' ? (fee.amount * studentData.discount) / 100 : 0;
+        const finalAmount = fee.amount - discountAmount;
+        
+        // Always create records for all fee types to ensure they show in ledger
+        await supabase
+          .from('student_fee_details')
+          .insert({
+            student_id: student.id,
+            fee_type: fee.type,
+            total_amount: finalAmount,
+            paid_amount: 0,
+            outstanding_amount: finalAmount
+          });
+      }
+
+      // Create fee structure record
       const { data: feeStructure, error: feeError } = await supabase
         .from('fee_structures')
         .insert({
           fee_type: 'tuition',
           amount: studentData.tuitionFees,
           class_grade: studentData.classGrade,
-          frequency: 'monthly',
+          frequency: 'yearly',
           description: `Tuition fees for ${studentData.classGrade} - ${studentData.section}`
         })
         .select()

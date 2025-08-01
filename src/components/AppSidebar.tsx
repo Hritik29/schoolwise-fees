@@ -34,7 +34,7 @@ const menuItems = [
   {
     title: "Students",
     items: [
-      { title: "Add / Enroll Student", url: "/students/enroll", icon: UserPlus },
+      { title: "Enroll Student", url: "/students/enroll", icon: UserPlus },
       { title: "View All Students", url: "/students", icon: Users },
       { title: "Transfer Certificate", url: "/students/transfer", icon: FileText },
     ]
@@ -46,6 +46,22 @@ const menuItems = [
       { title: "Student Fee Data", url: "/fees/data", icon: Eye },
       { title: "Remaining Fees", url: "/fees/remaining", icon: AlertTriangle },
       { title: "Data Insights", url: "/fees/insights", icon: TrendingUp },
+    ]
+  },
+  {
+    title: "Exam Management",
+    items: [
+      { title: "Create Exam", url: "/exams/create", icon: FileText },
+      { title: "View Exams", url: "/exams", icon: Eye },
+      { title: "Results", url: "/exams/results", icon: BarChart3 },
+    ]
+  },
+  {
+    title: "Reports",
+    items: [
+      { title: "Student Reports", url: "/reports/students", icon: Users },
+      { title: "Fee Reports", url: "/reports/fees", icon: CreditCard },
+      { title: "Academic Reports", url: "/reports/academic", icon: BarChart3 },
     ]
   }
 ];
