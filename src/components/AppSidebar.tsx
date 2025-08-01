@@ -31,39 +31,10 @@ import {
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  {
-    title: "Students",
-    items: [
-      { title: "Enroll", url: "/students/enroll", icon: UserPlus },
-      { title: "View All Students", url: "/students", icon: Users },
-      { title: "Transfer Certificate", url: "/students/transfer", icon: FileText },
-    ]
-  },
-  {
-    title: "Fees Management", 
-    items: [
-      { title: "Deposit Fees", url: "/fees/deposit", icon: Wallet },
-      { title: "Student Fee Data", url: "/fees/data", icon: Eye },
-      { title: "Remaining Data", url: "/fees/remaining", icon: AlertTriangle },
-      { title: "Data Insights", url: "/fees/insights", icon: TrendingUp },
-    ]
-  },
-  {
-    title: "Exam Management",
-    items: [
-      { title: "Create Exam", url: "/exams/create", icon: FileText },
-      { title: "View Exams", url: "/exams", icon: Eye },
-      { title: "Results", url: "/exams/results", icon: BarChart3 },
-    ]
-  },
-  {
-    title: "Reports",
-    items: [
-      { title: "Student Reports", url: "/reports/students", icon: Users },
-      { title: "Fee Reports", url: "/reports/fees", icon: CreditCard },
-      { title: "Academic Reports", url: "/reports/academic", icon: BarChart3 },
-    ]
-  }
+  { title: "Students", url: "/students-overview", icon: Users },
+  { title: "Fee Management", url: "/fees-overview", icon: CreditCard },
+  { title: "Exam Management", url: "/exams-overview", icon: BarChart3 },
+  { title: "Reports", url: "/reports-overview", icon: TrendingUp }
 ];
 
 export function AppSidebar() {
@@ -104,42 +75,16 @@ export function AppSidebar() {
         <div className="flex-1 py-4">
           {menuItems.map((item, index) => (
             <SidebarGroup key={index} className="px-3 mb-2">
-              {item.title && !item.items && (
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url || "/"} className={getNavCls}>
-                        <item.icon className="mr-3 h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              )}
-              
-              {item.items && (
-                <>
-                  {!isCollapsed && (
-                    <SidebarGroupLabel className="text-sidebar-muted-foreground text-xs font-medium mb-2">
-                      {item.title}
-                    </SidebarGroupLabel>
-                  )}
-                  <SidebarGroupContent>
-                    <SidebarMenu className="space-y-1">
-                      {item.items.map((subItem) => (
-                        <SidebarMenuItem key={subItem.title}>
-                          <SidebarMenuButton asChild>
-                            <NavLink to={subItem.url} className={getNavCls}>
-                              <subItem.icon className="mr-3 h-5 w-5" />
-                              {!isCollapsed && <span className="text-sm">{subItem.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </>
-              )}
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url || "/"} className={getNavCls}>
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {!isCollapsed && <span className="text-sm">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
             </SidebarGroup>
           ))}
         </div>
