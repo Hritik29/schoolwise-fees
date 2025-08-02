@@ -34,7 +34,8 @@ const menuItems = [
   { title: "Students", url: "/students-overview", icon: Users },
   { title: "Fee Management", url: "/fees-overview", icon: CreditCard },
   { title: "Exam Management", url: "/exams-overview", icon: BarChart3 },
-  { title: "Reports", url: "/reports-overview", icon: TrendingUp }
+  { title: "Reports", url: "/reports-overview", icon: TrendingUp },
+  { title: "Settings", url: "/settings", icon: Settings }
 ];
 
 export function AppSidebar() {
@@ -45,8 +46,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium rounded-lg" 
-      : "hover:bg-sidebar-accent text-sidebar-foreground rounded-lg transition-colors";
+      ? "bg-primary text-primary-foreground font-medium shadow-md border border-primary/20" 
+      : "hover:bg-muted hover:shadow-sm border border-transparent hover:border-muted-foreground/20 transition-all duration-200 hover:scale-[1.02]";
 
   const isCollapsed = state === "collapsed";
 
@@ -74,13 +75,22 @@ export function AppSidebar() {
         {/* Navigation Menu */}
         <div className="flex-1 py-4">
           {menuItems.map((item, index) => (
-            <SidebarGroup key={index} className="px-3 mb-2">
+            <SidebarGroup key={index} className="px-3 mb-1">
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url || "/"} className={getNavCls}>
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {!isCollapsed && <span className="text-sm">{item.title}</span>}
+                    <NavLink 
+                      to={item.url || "/"} 
+                      className={`${getNavCls({ isActive: isActive(item.url || "/") })} p-3 rounded-lg flex items-center group`}
+                    >
+                      <item.icon className={`mr-3 h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${
+                        isActive(item.url || "/") ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                      }`} />
+                      {!isCollapsed && (
+                        <span className="text-sm font-medium transition-colors duration-200">
+                          {item.title}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -110,10 +120,6 @@ export function AppSidebar() {
             
             {!isCollapsed && (
               <div className="mt-2 flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-xs">Settings</span>
-                </button>
                 <button className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors">
                   <LogOut className="w-4 h-4" />
                   <span className="text-xs">Logout</span>

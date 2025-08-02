@@ -127,15 +127,13 @@ export default function EnrollStudent() {
     setLoading(true);
     try {
       // Create student record
-      // Generate unique student ID
-      const studentId = `STU${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      
+      // Use the user-provided scholar number as student_id
       const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({
           first_name: studentData.firstName,
           last_name: "",
-          student_id: studentId,
+          student_id: studentData.scholarNumber,
           class_grade: studentData.classGrade,
           section: studentData.section,
           parent_name: studentData.fatherName,

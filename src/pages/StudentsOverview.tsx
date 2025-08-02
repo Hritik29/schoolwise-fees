@@ -47,7 +47,11 @@ export default function StudentsOverview() {
         {studentOptions.map((option, index) => {
           const Icon = option.icon;
           return (
-            <Card key={index} className="shadow-soft hover:shadow-md transition-shadow cursor-pointer group">
+            <Card 
+              key={index} 
+              className="shadow-soft hover:shadow-md transition-shadow cursor-pointer group"
+              onClick={() => navigate(option.url)}
+            >
               <CardHeader className="pb-4">
                 <div className={`w-12 h-12 rounded-lg ${option.bgColor} flex items-center justify-center mb-4`}>
                   <Icon className={`w-6 h-6 ${option.color}`} />
@@ -65,8 +69,11 @@ export default function StudentsOverview() {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => navigate(option.url)}
                     className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(option.url);
+                    }}
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     Open

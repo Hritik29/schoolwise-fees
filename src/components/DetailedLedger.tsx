@@ -50,9 +50,10 @@ export default function DetailedLedger({ studentId, studentInfo }: DetailedLedge
   const feeTypeColors = {
     tuition: { bg: "bg-primary/10", border: "border-primary/20", text: "text-primary" },
     admission: { bg: "bg-accent/10", border: "border-accent/20", text: "text-accent" },
-    transport: { bg: "bg-warning/10", border: "border-warning/20", text: "text-warning" },
+    transport: { bg: "bg-amber-100", border: "border-amber-200", text: "text-amber-600" },
     other: { bg: "bg-secondary/10", border: "border-secondary/20", text: "text-secondary-foreground" },
-    previous_year: { bg: "bg-destructive/10", border: "border-destructive/20", text: "text-destructive" }
+    previous_year: { bg: "bg-destructive/10", border: "border-destructive/20", text: "text-destructive" },
+    discount: { bg: "bg-green-100", border: "border-green-200", text: "text-green-600" }
   };
 
   const handlePrint = () => {
@@ -70,11 +71,12 @@ export default function DetailedLedger({ studentId, studentInfo }: DetailedLedge
 
   // Define all fee types that should always be displayed
   const allFeeTypes = [
-    { type: 'tuition', label: 'Tuition Fees' },
-    { type: 'transport', label: 'Transport' },
+    { type: 'tuition', label: 'Tuition Fee' },
+    { type: 'transport', label: 'Transport Fee' },
     { type: 'admission', label: 'Admission Fee' },
-    { type: 'other', label: 'Other Fees' },
-    { type: 'previous_year', label: 'Previous Year Fee' }
+    { type: 'other', label: 'Other Fee' },
+    { type: 'previous_year', label: 'Previous Year Fees' },
+    { type: 'discount', label: 'Discount Offered' }
   ];
 
   // Create a complete fee breakdown with all fee types

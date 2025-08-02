@@ -17,6 +17,8 @@ import RemainingFees from "./pages/fees/RemainingFees";
 import DataInsights from "./pages/fees/DataInsights";
 import ExamsOverview from "./pages/ExamsOverview";
 import ReportsOverview from "./pages/ReportsOverview";
+import FeesReport from "./pages/reports/FeesReport";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,7 +43,9 @@ const App = () => (
             <Route path="/fees/remaining" element={<RemainingFees />} />
             <Route path="/fees/insights" element={<DataInsights />} />
             <Route path="/exams-overview" element={<ExamsOverview />} />
-            <Route path="/reports-overview" element={<ReportsOverview />} />
+        <Route path="/reports-overview" element={<ReportsOverview />} />
+        <Route path="/reports/fees" element={<FeesReport />} />
+        <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
