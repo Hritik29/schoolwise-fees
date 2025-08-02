@@ -67,7 +67,7 @@ export default function TransferCertificate() {
         query = query.or(`first_name.ilike.%${searchTerm}%, student_id.ilike.%${searchTerm}%`);
       }
       
-      if (selectedClass) {
+      if (selectedClass && selectedClass !== "all") {
         query = query.eq("class_grade", selectedClass);
       }
       
@@ -205,7 +205,7 @@ export default function TransferCertificate() {
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Classes</SelectItem>
+                  <SelectItem value="all">All Classes</SelectItem>
                   <SelectItem value="Nur.">Nursery</SelectItem>
                   <SelectItem value="L.K.G.">L.K.G.</SelectItem>
                   <SelectItem value="U.K.G.">U.K.G.</SelectItem>
