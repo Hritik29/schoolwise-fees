@@ -33,6 +33,7 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Students", url: "/students-overview", icon: Users },
   { title: "Fee Management", url: "/fees-overview", icon: CreditCard },
+  { title: "Expense Management", url: "/expense-overview", icon: Wallet },
   { title: "Exam Management", url: "/exams-overview", icon: BarChart3 },
   { title: "Reports", url: "/reports-overview", icon: TrendingUp },
   { title: "Settings", url: "/settings", icon: Settings }

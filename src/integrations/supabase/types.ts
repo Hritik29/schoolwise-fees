@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          added_by: string
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string | null
+          expense_title: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          added_by: string
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          expense_title: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string | null
+          expense_title?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fee_structures: {
         Row: {
           amount: number
