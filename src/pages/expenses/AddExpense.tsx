@@ -24,6 +24,7 @@ export default function AddExpense() {
     amount: "",
     date: new Date(),
     description: "",
+    added_by: "",
   });
 
   const categories = [
@@ -38,7 +39,7 @@ export default function AddExpense() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.expense_title || !formData.category || !formData.amount) {
+    if (!formData.expense_title || !formData.category || !formData.amount || !formData.added_by) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -59,7 +60,7 @@ export default function AddExpense() {
             amount: parseFloat(formData.amount),
             date: format(formData.date, 'yyyy-MM-dd'),
             description: formData.description,
-            added_by: 'admin@school.edu', // Replace with actual user
+            added_by: formData.added_by,
           }
         ]);
 
@@ -84,24 +85,25 @@ export default function AddExpense() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => navigate('/expense-overview')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Add New Expense</h1>
-          <p className="text-muted-foreground mt-2">
-            Record a new expense transaction
-          </p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-2xl space-y-6">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/expense-overview')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Add New Expense</h1>
+            <p className="text-muted-foreground mt-2">
+              Record a new expense transaction
+            </p>
+          </div>
         </div>
-      </div>
 
-      <Card className="max-w-2xl">
+        <Card>
         <CardHeader>
           <CardTitle>Expense Details</CardTitle>
           <CardDescription>
@@ -184,6 +186,17 @@ export default function AddExpense() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="added_by">Expense Done by Whom *</Label>
+              <Input
+                id="added_by"
+                placeholder="Enter person name or ID"
+                value={formData.added_by}
+                onChange={(e) => setFormData({ ...formData, added_by: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -213,7 +226,8 @@ export default function AddExpense() {
             </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
