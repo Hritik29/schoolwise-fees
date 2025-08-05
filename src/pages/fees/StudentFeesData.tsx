@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Eye, FileText, Download, PrinterIcon } from "lucide-react";
+import { Search, Filter, FileText, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { exportFeesDataToExcel } from "@/utils/exportToExcel";
+import DetailedLedger from "@/components/DetailedLedger";
 
 interface StudentFeeData {
   id: string;
@@ -31,16 +32,6 @@ interface StudentFeeData {
   };
 }
 
-interface Transaction {
-  id: string;
-  amount: number;
-  transaction_date: string;
-  payment_method: string;
-  reference_number: string;
-  created_by: string;
-  remarks: string;
-}
-
 export default function StudentFeesData() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -48,7 +39,7 @@ export default function StudentFeesData() {
   const [selectedStudent, setSelectedStudent] = useState<StudentFeeData | null>(null);
   const { toast } = useToast();
 
-  const { data: feesData, isLoading, refetch } = useQuery({
+  const { data: feesData, isLoading } = useQuery({
     queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter],
     queryFn: async () => {
       let query = supabase
@@ -123,22 +114,6 @@ export default function StudentFeesData() {
     }
   });
 
-  const { data: transactions } = useQuery({
-    queryKey: ['transactions', selectedStudent?.id],
-    queryFn: async () => {
-      if (!selectedStudent) return [];
-      
-      const { data, error } = await supabase
-        .from('fee_transactions')
-        .select('*')
-        .eq('student_fee_id', selectedStudent.id)
-        .order('transaction_date', { ascending: false });
-
-      if (error) throw error;
-      return data as Transaction[];
-    },
-    enabled: !!selectedStudent
-  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -180,9 +155,6 @@ export default function StudentFeesData() {
     }
   };
 
-  const handlePrintLedger = () => {
-    window.print();
-  };
 
   return (
     <div className="space-y-6">
@@ -297,105 +269,17 @@ export default function StudentFeesData() {
                             </DialogHeader>
                             
                             {selectedStudent && (
-                              <div className="space-y-6">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-lg">Student Information</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-2">
-                                      <div className="flex justify-between text-sm">
-                                        <span>Name:</span>
-                                        <span className="font-medium">{selectedStudent.students.first_name} {selectedStudent.students.last_name}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span>Scholar No:</span>
-                                        <span className="font-medium">{selectedStudent.students.student_id}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span>Class:</span>
-                                        <span className="font-medium">{selectedStudent.students.class_grade}-{selectedStudent.students.section}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span>Parent:</span>
-                                        <span className="font-medium">{selectedStudent.students.parent_name}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-lg">Fee Summary</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-2">
-                                      <div className="flex justify-between text-sm">
-                                        <span>Total Fees:</span>
-                                        <span className="font-medium">₹{selectedStudent.total_amount}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm text-success">
-                                        <span>Paid Amount:</span>
-                                        <span className="font-medium">₹{selectedStudent.paid_amount}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm text-destructive">
-                                        <span>Outstanding:</span>
-                                        <span className="font-medium">₹{selectedStudent.outstanding_amount}</span>
-                                      </div>
-                                      <div className="flex justify-between text-sm">
-                                        <span>Status:</span>
-                                        <span>{getStatusBadge(selectedStudent.status)}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </div>
-
-                                <Card>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg flex items-center justify-between">
-                                      Transaction History
-                                      <Button 
-                                        onClick={handlePrintLedger} 
-                                        variant="outline" 
-                                        size="sm"
-                                        className="print:hidden"
-                                      >
-                                        <PrinterIcon className="w-4 h-4 mr-2" />
-                                        Print Ledger
-                                      </Button>
-                                    </CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                    {transactions && transactions.length > 0 ? (
-                                      <div className="space-y-3">
-                                        {transactions.map((transaction) => (
-                                          <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                            <div>
-                                              <p className="font-medium">₹{transaction.amount}</p>
-                                              <p className="text-sm text-muted-foreground">
-                                                {new Date(transaction.transaction_date).toLocaleDateString()} • {transaction.payment_method}
-                                              </p>
-                                              {transaction.reference_number && (
-                                                <p className="text-xs text-muted-foreground">
-                                                  Ref: {transaction.reference_number}
-                                                </p>
-                                              )}
-                                            </div>
-                                            <div className="text-right">
-                                              <p className="text-sm font-medium">{transaction.created_by}</p>
-                                              {transaction.remarks && (
-                                                <p className="text-xs text-muted-foreground">{transaction.remarks}</p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="text-center py-8">
-                                        <p className="text-muted-foreground">No transactions found</p>
-                                      </div>
-                                    )}
-                                  </CardContent>
-                                </Card>
-                              </div>
+                              <DetailedLedger 
+                                studentId={selectedStudent.student_id}
+                                studentInfo={{
+                                  first_name: selectedStudent.students.first_name,
+                                  last_name: selectedStudent.students.last_name,
+                                  student_id: selectedStudent.students.student_id,
+                                  class_grade: selectedStudent.students.class_grade,
+                                  section: selectedStudent.students.section,
+                                  parent_name: selectedStudent.students.parent_name
+                                }}
+                              />
                             )}
                           </DialogContent>
                         </Dialog>

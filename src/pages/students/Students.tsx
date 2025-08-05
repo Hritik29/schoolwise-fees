@@ -242,6 +242,18 @@ export default function Students() {
                                        <label className="text-sm font-medium text-muted-foreground">Account Number</label>
                                        <p className="font-medium">{selectedStudent.account_number || 'Not provided'}</p>
                                      </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">IFSC Code</label>
+                                       <p className="font-medium">{selectedStudent.ifsc_code || 'Not provided'}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Bank Account Name</label>
+                                       <p className="font-medium">{selectedStudent.bank_account_name || 'Not provided'}</p>
+                                     </div>
+                                     <div>
+                                       <label className="text-sm font-medium text-muted-foreground">Admission Date</label>
+                                       <p className="font-medium">{selectedStudent.admission_date ? new Date(selectedStudent.admission_date).toLocaleDateString() : 'Not provided'}</p>
+                                     </div>
                                    </div>
                                  </div>
                               )}

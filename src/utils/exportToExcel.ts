@@ -34,8 +34,15 @@ export const exportStudentsToExcel = (students: any[]) => {
     'Email': student.email || '',
     'Address': student.address || '',
     'Date of Birth': student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString() : '',
+    'Admission Date': student.admission_date ? new Date(student.admission_date).toLocaleDateString() : '',
+    'Enrollment Date': new Date(student.enrollment_date).toLocaleDateString(),
     'Status': student.status,
-    'Enrollment Date': new Date(student.enrollment_date).toLocaleDateString()
+    'Aadhar Number': student.aadhar_number || '',
+    'SSSM ID': student.sssm_id || '',
+    'Apar ID': student.apar_id || '',
+    'Account Number': student.account_number || '',
+    'IFSC Code': student.ifsc_code || '',
+    'Bank Account Name': student.bank_account_name || ''
   }));
   
   return exportToExcel(exportData, 'students-data', 'Students');
