@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Search, Phone, Mail, Download } from "lucide-react";
+import { AlertTriangle, Search, Phone, Mail, Download, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { exportDefaultersToExcel } from "@/utils/exportToExcel";
 
 interface DefaulterData {
@@ -31,6 +32,7 @@ interface DefaulterData {
 }
 
 export default function RemainingFees() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [overdueFilter, setOverdueFilter] = useState("all");
@@ -186,9 +188,15 @@ export default function RemainingFees() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Remaining Fees</h1>
-        <p className="text-muted-foreground">Track and manage outstanding fee payments</p>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate('/fees-overview')}>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Fees
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Remaining Fees</h1>
+          <p className="text-muted-foreground">Track and manage outstanding fee payments</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

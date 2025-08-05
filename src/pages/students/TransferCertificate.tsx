@@ -23,11 +23,13 @@ import {
   Eye, 
   FileText,
   Award,
-  School
+  School,
+  ArrowLeft
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Student {
   id: string;
@@ -44,6 +46,7 @@ interface Student {
 }
 
 export default function TransferCertificate() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -173,9 +176,15 @@ export default function TransferCertificate() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Transfer Certificate</h1>
-        <p className="text-muted-foreground">Generate and manage TC for student withdrawals</p>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate('/students')}>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Students
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transfer Certificate</h1>
+          <p className="text-muted-foreground">Generate and manage TC for student withdrawals</p>
+        </div>
       </div>
 
       {/* Search Section */}

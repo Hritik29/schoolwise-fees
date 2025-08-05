@@ -274,7 +274,9 @@ export type Database = {
           aadhar_number: string | null
           account_number: string | null
           address: string | null
+          admission_date: string | null
           apar_id: string | null
+          bank_account_name: string | null
           class_grade: string
           created_at: string
           date_of_birth: string | null
@@ -282,6 +284,7 @@ export type Database = {
           enrollment_date: string
           first_name: string
           id: string
+          ifsc_code: string | null
           last_name: string
           parent_email: string | null
           parent_name: string
@@ -297,7 +300,9 @@ export type Database = {
           aadhar_number?: string | null
           account_number?: string | null
           address?: string | null
+          admission_date?: string | null
           apar_id?: string | null
+          bank_account_name?: string | null
           class_grade: string
           created_at?: string
           date_of_birth?: string | null
@@ -305,6 +310,7 @@ export type Database = {
           enrollment_date?: string
           first_name: string
           id?: string
+          ifsc_code?: string | null
           last_name: string
           parent_email?: string | null
           parent_name: string
@@ -320,7 +326,9 @@ export type Database = {
           aadhar_number?: string | null
           account_number?: string | null
           address?: string | null
+          admission_date?: string | null
           apar_id?: string | null
+          bank_account_name?: string | null
           class_grade?: string
           created_at?: string
           date_of_birth?: string | null
@@ -328,6 +336,7 @@ export type Database = {
           enrollment_date?: string
           first_name?: string
           id?: string
+          ifsc_code?: string | null
           last_name?: string
           parent_email?: string | null
           parent_name?: string

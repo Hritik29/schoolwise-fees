@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, User, CreditCard, DollarSign, Receipt } from "lucide-react";
+import { Search, User, CreditCard, DollarSign, Receipt, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import ReceiptSlip from "@/components/ReceiptSlip";
 
 interface SelectedStudent {
@@ -31,6 +32,7 @@ interface StudentFees {
 }
 
 export default function DepositFees() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null);
   const [studentFees, setStudentFees] = useState<StudentFees | null>(null);
@@ -166,9 +168,15 @@ export default function DepositFees() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Deposit Fees</h1>
-        <p className="text-muted-foreground">Record fee payments for students</p>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate('/fees-overview')}>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Fees
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Deposit Fees</h1>
+          <p className="text-muted-foreground">Record fee payments for students</p>
+        </div>
       </div>
 
       {!selectedStudent ? (

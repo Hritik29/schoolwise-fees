@@ -25,6 +25,7 @@ interface StudentData {
   email: string;
   address: string;
   dateOfBirth: string;
+  admissionDate: string;
   isActive: boolean;
   useTransport: boolean;
   tuitionFees: number;
@@ -37,6 +38,8 @@ interface StudentData {
   sssmId: string;
   aparId: string;
   accountNumber: string;
+  ifscCode: string;
+  bankAccountName: string;
 }
 
 export default function EnrollStudent() {
@@ -69,6 +72,7 @@ export default function EnrollStudent() {
     email: "",
     address: "",
     dateOfBirth: "",
+    admissionDate: new Date().toISOString().split('T')[0],
     isActive: true,
     useTransport: false,
     tuitionFees: 2000,
@@ -80,7 +84,9 @@ export default function EnrollStudent() {
     aadharNumber: "",
     sssmId: "",
     aparId: "",
-    accountNumber: ""
+    accountNumber: "",
+    ifscCode: "",
+    bankAccountName: ""
   });
 
   const classOptions = [
@@ -107,11 +113,12 @@ export default function EnrollStudent() {
   };
 
   const validateStep1 = () => {
-    const required = ['firstName', 'fatherName', 'phone', 'scholarNumber', 'rollNumber', 'classGrade', 'section', 'aadharNumber', 'sssmId', 'aparId', 'accountNumber'];
+    const required = ['firstName', 'fatherName', 'phone', 'scholarNumber', 'rollNumber', 'classGrade', 'section', 'aadharNumber', 'sssmId', 'aparId', 'accountNumber', 'ifscCode', 'bankAccountName', 'admissionDate'];
     const basicValidation = required.every(field => studentData[field as keyof StudentData]);
     const aadharValid = studentData.aadharNumber.length === 12;
     const accountValid = studentData.accountNumber.length > 0;
-    return basicValidation && aadharValid && accountValid;
+    const ifscValid = studentData.ifscCode.length >= 11;
+    return basicValidation && aadharValid && accountValid && ifscValid;
   };
 
   const calculateTotalFees = () => {
@@ -143,11 +150,14 @@ export default function EnrollStudent() {
           email: studentData.email,
           address: studentData.address,
           date_of_birth: studentData.dateOfBirth || null,
+          admission_date: studentData.admissionDate,
           status: studentData.isActive ? 'active' : 'inactive',
           aadhar_number: studentData.aadharNumber,
           sssm_id: studentData.sssmId,
           apar_id: studentData.aparId,
-          account_number: studentData.accountNumber
+          account_number: studentData.accountNumber,
+          ifsc_code: studentData.ifscCode,
+          bank_account_name: studentData.bankAccountName
         })
         .select()
         .single();
@@ -228,6 +238,7 @@ export default function EnrollStudent() {
         email: "",
         address: "",
         dateOfBirth: "",
+        admissionDate: new Date().toISOString().split('T')[0],
         isActive: true,
         useTransport: false,
         tuitionFees: 2000,
@@ -239,7 +250,9 @@ export default function EnrollStudent() {
         aadharNumber: "",
         sssmId: "",
         aparId: "",
-        accountNumber: ""
+        accountNumber: "",
+        ifscCode: "",
+        bankAccountName: ""
       });
       setCurrentStep(1);
     } catch (error: any) {
@@ -437,6 +450,40 @@ export default function EnrollStudent() {
                     handleInputChange('accountNumber', value);
                   }}
                   placeholder="Enter bank account number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ifscCode">IFSC Code *</Label>
+                <Input
+                  id="ifscCode"
+                  value={studentData.ifscCode}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    handleInputChange('ifscCode', value);
+                  }}
+                  placeholder="Enter IFSC code"
+                  maxLength={11}
+                />
+                {studentData.ifscCode && studentData.ifscCode.length < 11 && (
+                  <p className="text-xs text-destructive">IFSC code must be at least 11 characters</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankAccountName">Bank Account Name *</Label>
+                <Input
+                  id="bankAccountName"
+                  value={studentData.bankAccountName}
+                  onChange={(e) => handleInputChange('bankAccountName', e.target.value)}
+                  placeholder="Enter bank account holder name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admissionDate">Admission Date *</Label>
+                <Input
+                  id="admissionDate"
+                  type="date"
+                  value={studentData.admissionDate}
+                  onChange={(e) => handleInputChange('admissionDate', e.target.value)}
                 />
               </div>
             </div>

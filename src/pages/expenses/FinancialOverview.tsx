@@ -28,15 +28,16 @@ export default function FinancialOverview() {
     netBalance: 0,
   });
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth().toString());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [isLoading, setIsLoading] = useState(true);
   const [chartData, setChartData] = useState<any[]>([]);
 
   const fetchFinancialData = async () => {
     try {
-      const currentYear = new Date().getFullYear();
+      const year = parseInt(selectedYear);
       const month = parseInt(selectedMonth);
-      const monthStart = startOfMonth(new Date(currentYear, month));
-      const monthEnd = endOfMonth(new Date(currentYear, month));
+      const monthStart = startOfMonth(new Date(year, month));
+      const monthEnd = endOfMonth(new Date(year, month));
       const today = new Date().toISOString().split('T')[0];
 
       // Fetch total fees collected (from fee_transactions table)
@@ -107,7 +108,7 @@ export default function FinancialOverview() {
 
   useEffect(() => {
     fetchFinancialData();
-  }, [selectedMonth]);
+  }, [selectedMonth, selectedYear]);
 
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString()}`;
@@ -129,17 +130,32 @@ export default function FinancialOverview() {
             Fee vs Expense Summary and Analytics
           </p>
         </div>
-        <div className="w-48">
+        <div className="flex gap-2">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Month" />
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
               {Array.from({ length: 12 }, (_, i) => (
                 <SelectItem key={i} value={i.toString()}>
-                  {format(new Date(2024, i, 1), 'MMMM yyyy')}
+                  {format(new Date(2024, i, 1), 'MMMM')}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 5 }, (_, i) => {
+                const year = new Date().getFullYear() - 2 + i;
+                return (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -245,7 +261,7 @@ export default function FinancialOverview() {
             <CardHeader>
               <CardTitle>Fees vs Expenses Comparison</CardTitle>
               <CardDescription>
-                Visual representation of income vs expenses for {format(new Date(2024, parseInt(selectedMonth), 1), 'MMMM yyyy')}
+                Visual representation of income vs expenses for {format(new Date(parseInt(selectedYear), parseInt(selectedMonth), 1), 'MMMM yyyy')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -288,17 +304,23 @@ export default function FinancialOverview() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
                   <div>
                     <h5 className="font-medium mb-2">Fee Collection Rate</h5>
                     <p className="text-sm text-muted-foreground">
-                      {financialData.totalFeesCollected > 0 ? 'Active' : 'No fees collected this month'}
+                      {financialData.totalFeesCollected > 0 ? 'Active collection in progress' : 'No fees collected this month'}
                     </p>
                   </div>
                   <div>
                     <h5 className="font-medium mb-2">Expense Management</h5>
                     <p className="text-sm text-muted-foreground">
                       {financialData.totalExpenses > 0 ? 'Active spending recorded' : 'No expenses recorded this month'}
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium mb-2">Financial Health</h5>
+                    <p className="text-sm text-muted-foreground">
+                      {((financialData.totalFeesCollected / (financialData.totalFeesCollected + financialData.totalExpenses)) * 100 || 0).toFixed(1)}% fee collection efficiency
                     </p>
                   </div>
                 </div>
