@@ -8,10 +8,11 @@ export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [studentsResult, feesResult, transactionsResult] = await Promise.all([
+      const [studentsResult, feesResult, transactionsResult, expensesResult] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact' }),
         supabase.from('student_fees').select('total_amount, paid_amount, outstanding_amount'),
-        supabase.from('fee_transactions').select('amount, transaction_date')
+        supabase.from('fee_transactions').select('amount, transaction_date'),
+        supabase.from('expenses').select('amount, date')
       ]);
 
       const totalStudents = studentsResult.count || 0;
@@ -23,6 +24,8 @@ export default function Dashboard() {
       
       const thisMonth = new Date().getMonth();
       const thisYear = new Date().getFullYear();
+      const today = new Date().toDateString();
+      
       const monthlyCollection = (transactionsResult.data || [])
         .filter(t => {
           const date = new Date(t.transaction_date);
@@ -30,12 +33,20 @@ export default function Dashboard() {
         })
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
+      // Calculate total and today's expenses
+      const totalExpense = (expensesResult.data || []).reduce((sum, exp) => sum + Number(exp.amount), 0);
+      const todaysExpense = (expensesResult.data || [])
+        .filter(exp => new Date(exp.date).toDateString() === today)
+        .reduce((sum, exp) => sum + Number(exp.amount), 0);
+
       return {
         totalStudents,
         totalFees,
         totalCollected,
         totalOutstanding,
         monthlyCollection,
+        totalExpense,
+        todaysExpense,
         collectionRate: totalFees > 0 ? (totalCollected / totalFees) * 100 : 0
       };
     }
@@ -83,6 +94,20 @@ export default function Dashboard() {
       icon: GraduationCap,
       description: "Overall collection percentage",
       color: "text-primary"
+    },
+    {
+      title: "Total Expense",
+      value: `₹${(stats?.totalExpense || 0).toLocaleString()}`,
+      icon: DollarSign,
+      description: "All time expenses",
+      color: "text-warning"
+    },
+    {
+      title: "Today's Expense",
+      value: `₹${(stats?.todaysExpense || 0).toLocaleString()}`,
+      icon: AlertTriangle,
+      description: "Today's total spending",
+      color: "text-destructive"
     }
   ];
 

@@ -15,6 +15,7 @@ import {
   User
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
 
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const menuItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -106,22 +108,29 @@ export function AppSidebar() {
             {!isCollapsed ? (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent">
                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-sm font-medium">A</span>
+                  <span className="text-primary-foreground text-sm font-medium">
+                    {user?.email?.[0]?.toUpperCase() || 'U'}
+                  </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground">admin</p>
-                  <p className="text-xs text-sidebar-muted-foreground truncate">admin@school.edu</p>
+                  <p className="text-sm font-medium text-sidebar-foreground">{user?.email || 'User'}</p>
+                  <p className="text-xs text-sidebar-muted-foreground truncate">Super-Vision User</p>
                 </div>
               </div>
             ) : (
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mx-auto">
-                <span className="text-primary-foreground text-sm font-medium">A</span>
+                <span className="text-primary-foreground text-sm font-medium">
+                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                </span>
               </div>
             )}
             
             {!isCollapsed && (
               <div className="mt-2 flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors">
+                <button 
+                  onClick={logout}
+                  className="flex-1 flex items-center justify-center gap-2 p-2 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors"
+                >
                   <LogOut className="w-4 h-4" />
                   <span className="text-xs">Logout</span>
                 </button>

@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 interface StudentData {
-  firstName: string;
+  fullName: string;
   fatherName: string;
   motherName: string;
   phone: string;
@@ -61,7 +61,7 @@ export default function EnrollStudent() {
   });
 
   const [studentData, setStudentData] = useState<StudentData>({
-    firstName: "",
+    fullName: "",
     fatherName: "",
     motherName: "",
     phone: "",
@@ -113,12 +113,9 @@ export default function EnrollStudent() {
   };
 
   const validateStep1 = () => {
-    const required = ['firstName', 'fatherName', 'phone', 'scholarNumber', 'rollNumber', 'classGrade', 'section', 'aadharNumber', 'sssmId', 'aparId', 'accountNumber', 'ifscCode', 'bankAccountName', 'admissionDate'];
+    const required = ['fullName', 'fatherName', 'phone', 'scholarNumber', 'classGrade', 'address'];
     const basicValidation = required.every(field => studentData[field as keyof StudentData]);
-    const aadharValid = studentData.aadharNumber.length === 12;
-    const accountValid = studentData.accountNumber.length > 0;
-    const ifscValid = studentData.ifscCode.length >= 11;
-    return basicValidation && aadharValid && accountValid && ifscValid;
+    return basicValidation;
   };
 
   const calculateTotalFees = () => {
@@ -138,7 +135,7 @@ export default function EnrollStudent() {
       const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({
-          first_name: studentData.firstName,
+          first_name: studentData.fullName,
           last_name: "",
           student_id: studentData.scholarNumber,
           class_grade: studentData.classGrade,
@@ -227,7 +224,7 @@ export default function EnrollStudent() {
 
       // Reset form and go back to step 1 for next enrollment
       setStudentData({
-        firstName: "",
+        fullName: "",
         fatherName: "",
         motherName: "",
         phone: "",
@@ -304,12 +301,12 @@ export default function EnrollStudent() {
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="fullName">Full Name *</Label>
                 <Input
-                  id="firstName"
-                  value={studentData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  placeholder="Enter first name"
+                  id="fullName"
+                  value={studentData.fullName}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  placeholder="Enter full name"
                 />
               </div>
               <div className="space-y-2">

@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/components/AuthProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import StudentsOverview from "./pages/StudentsOverview";
@@ -24,41 +26,53 @@ import ExpenseOverview from "./pages/ExpenseOverview";
 import AddExpense from "./pages/expenses/AddExpense";
 import ViewExpenses from "./pages/expenses/ViewExpenses";
 import FinancialOverview from "./pages/expenses/FinancialOverview";
+import Login from "./pages/auth/Login";
+import ActivityLogs from "./pages/reports/ActivityLogs";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/students-overview" element={<StudentsOverview />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="/students/enroll" element={<EnrollStudent />} />
-            <Route path="/students/edit/:id" element={<EditStudent />} />
-            <Route path="/students/transfer" element={<TransferCertificate />} />
-            <Route path="/fees-overview" element={<FeesOverview />} />
-            <Route path="/fees/deposit" element={<DepositFees />} />
-            <Route path="/fees/data" element={<StudentFeesData />} />
-            <Route path="/fees/remaining" element={<RemainingFees />} />
-            <Route path="/fees/insights" element={<DataInsights />} />
-            <Route path="/expense-overview" element={<ExpenseOverview />} />
-            <Route path="/expenses/add" element={<AddExpense />} />
-            <Route path="/expenses/view" element={<ViewExpenses />} />
-            <Route path="/expenses/overview" element={<FinancialOverview />} />
-            <Route path="/exams-overview" element={<ExamsOverview />} />
-        <Route path="/reports-overview" element={<ReportsOverview />} />
-        <Route path="/reports/fees" element={<FeesReport />} />
-        <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/students-overview" element={<StudentsOverview />} />
+                    <Route path="/students" element={<Students />} />
+                    <Route path="/students/enroll" element={<EnrollStudent />} />
+                    <Route path="/students/edit/:id" element={<EditStudent />} />
+                    <Route path="/students/transfer" element={<TransferCertificate />} />
+                    <Route path="/fees-overview" element={<FeesOverview />} />
+                    <Route path="/fees/deposit" element={<DepositFees />} />
+                    <Route path="/fees/data" element={<StudentFeesData />} />
+                    <Route path="/fees/remaining" element={<RemainingFees />} />
+                    <Route path="/fees/insights" element={<DataInsights />} />
+                    <Route path="/expense-overview" element={<ExpenseOverview />} />
+                    <Route path="/expenses/add" element={<AddExpense />} />
+                    <Route path="/expenses/view" element={<ViewExpenses />} />
+                    <Route path="/expenses/overview" element={<FinancialOverview />} />
+                    <Route path="/exams-overview" element={<ExamsOverview />} />
+                    <Route path="/reports-overview" element={<ReportsOverview />} />
+                    <Route path="/reports/fees" element={<FeesReport />} />
+                    <Route path="/reports/logs" element={<ActivityLogs />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            } />
           </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

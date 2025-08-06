@@ -202,6 +202,24 @@ export default function FinancialOverview() {
             </Card>
           </div>
 
+          {/* Today's Net Balance */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Today's Net Balance
+              </CardTitle>
+              <Calculator className={`h-4 w-4 ${(financialData.todayFees - financialData.todayExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${(financialData.todayFees - financialData.todayExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(financialData.todayFees - financialData.todayExpenses)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Today's income minus expenses
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Monthly Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>

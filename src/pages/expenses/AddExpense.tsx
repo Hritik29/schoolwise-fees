@@ -28,12 +28,13 @@ export default function AddExpense() {
   });
 
   const categories = [
-    "Stationery",
-    "Furniture", 
-    "Utilities",
+    "Transport",
     "Salary",
+    "EMI's",
+    "School Expense",
+    "Construction",
     "Maintenance",
-    "Others"
+    "Other"
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
