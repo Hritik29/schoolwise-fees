@@ -11,20 +11,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { exportStudentsToExcel } from "@/utils/exportToExcel";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import SessionSelector from "@/components/SessionSelector";
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
 
   const { data: students, isLoading } = useQuery({
-    queryKey: ['students', searchTerm],
+    queryKey: ['students', searchTerm, selectedSession],
     queryFn: async () => {
       let query = supabase
         .from('students')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (selectedSession) {
+        query = query.eq('academic_session', selectedSession);
+      }
 
       if (searchTerm) {
         query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,student_id.ilike.%${searchTerm}%`);
@@ -109,8 +116,13 @@ export default function Students() {
                 className="pl-10"
               />
             </div>
+            <SessionSelector
+              sessions={sessions}
+              value={selectedSession}
+              onChange={setSelectedSession}
+              className="w-40"
+            />
             <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
             <Button onClick={handleExportToExcel} variant="outline" size="sm">

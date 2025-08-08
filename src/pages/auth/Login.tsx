@@ -19,38 +19,43 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('app_users')
-        .select('*')
-        .eq('email', credentials.email)
-        .eq('password_hash', credentials.password)
-        .single();
 
-      if (error || !data) {
-        throw new Error('Invalid credentials');
+    // Hardcoded allowed users
+    const allowedUsers: Record<string, string> = {
+      "rakesh@supervision.in": "maheshwari1.1048",
+      "arvind@supervision.in": "arvind.20",
+      "ram@supervision.in": "fees.2025",
+      "sunil@supervision.in": "svia.2025",
+      "admin": "admin",
+    };
+
+    try {
+      const email = credentials.email.trim();
+      const password = credentials.password;
+
+      if (!allowedUsers[email] || allowedUsers[email] !== password) {
+        throw new Error("Invalid credentials");
       }
 
-      // Store user session in localStorage
-      localStorage.setItem('app_user', JSON.stringify(data));
-      
-      // Log the login activity
-      await supabase.from('activity_logs').insert({
-        user_email: data.email,
-        action: 'LOGIN',
-        description: 'User logged in successfully',
-        module: 'Authentication',
-        ip_address: 'Unknown',
-        user_agent: navigator.userAgent
-      });
+      const user = { id: email, email };
+      localStorage.setItem("app_user", JSON.stringify(user));
 
-      toast({
-        title: "Success!",
-        description: "Login successful",
-      });
+      // Log the login activity (best-effort)
+      try {
+        await supabase.from("activity_logs").insert({
+          user_email: email,
+          action: "LOGIN",
+          description: "User logged in successfully",
+          module: "Authentication",
+          ip_address: "Unknown",
+          user_agent: navigator.userAgent,
+        });
+      } catch {}
 
-      navigate('/');
+      toast({ title: "Success!", description: "Login successful" });
+
+      // Force full reload to avoid any redirect issues
+      window.location.href = "/";
     } catch (error: any) {
       toast({
         title: "Error",

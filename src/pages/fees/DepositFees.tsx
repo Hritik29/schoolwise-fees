@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ReceiptSlip from "@/components/ReceiptSlip";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import SessionSelector from "@/components/SessionSelector";
 
 interface SelectedStudent {
   id: string;
@@ -48,19 +50,24 @@ export default function DepositFees() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<any>(null);
   const { toast } = useToast();
+  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: ['student-search', searchTerm],
+    queryKey: ['student-search', searchTerm, selectedSession],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return [];
-      
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('students')
         .select('id, first_name, last_name, student_id, class_grade, section, parent_name, parent_phone')
         .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,student_id.ilike.%${searchTerm}%`)
-        .eq('status', 'active')
-        .limit(10);
+        .eq('status', 'active');
 
+      if (selectedSession) {
+        query = query.eq('academic_session', selectedSession);
+      }
+
+      const { data, error } = await query.limit(10);
       if (error) throw error;
       return data;
     },
@@ -123,7 +130,8 @@ export default function DepositFees() {
           remarks: paymentData.remarks,
           created_by: paymentData.payerName,
           fee_type: paymentData.feeType,
-          applied_to_fee_type: paymentData.feeType
+          applied_to_fee_type: paymentData.feeType,
+          academic_session: selectedSession || null,
         })
         .select()
         .single();
@@ -168,15 +176,23 @@ export default function DepositFees() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => navigate('/fees-overview')}>
-          <ArrowLeft className="w-4 h-4" />
-          Back to Fees
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Deposit Fees</h1>
-          <p className="text-muted-foreground">Record fee payments for students</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate('/fees-overview')}>
+            <ArrowLeft className="w-4 h-4" />
+            Back to Fees
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Deposit Fees</h1>
+            <p className="text-muted-foreground">Record fee payments for students</p>
+          </div>
         </div>
+        <SessionSelector
+          sessions={sessions}
+          value={selectedSession}
+          onChange={setSelectedSession}
+          className="w-40"
+        />
       </div>
 
       {!selectedStudent ? (

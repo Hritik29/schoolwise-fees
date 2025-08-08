@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          session_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          session_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          session_name?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string
@@ -100,6 +121,7 @@ export type Database = {
       }
       expenses: {
         Row: {
+          academic_session: string | null
           added_by: string
           amount: number
           category: string
@@ -111,6 +133,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_session?: string | null
           added_by: string
           amount: number
           category: string
@@ -122,6 +145,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_session?: string | null
           added_by?: string
           amount?: number
           category?: string
@@ -172,6 +196,7 @@ export type Database = {
       }
       fee_transactions: {
         Row: {
+          academic_session: string | null
           amount: number
           applied_to_fee_type: string | null
           created_at: string
@@ -188,6 +213,7 @@ export type Database = {
           transaction_type: string
         }
         Insert: {
+          academic_session?: string | null
           amount: number
           applied_to_fee_type?: string | null
           created_at?: string
@@ -204,6 +230,7 @@ export type Database = {
           transaction_type?: string
         }
         Update: {
+          academic_session?: string | null
           amount?: number
           applied_to_fee_type?: string | null
           created_at?: string
@@ -329,6 +356,7 @@ export type Database = {
       students: {
         Row: {
           aadhar_number: string | null
+          academic_session: string | null
           account_number: string | null
           address: string | null
           admission_date: string | null
@@ -355,6 +383,7 @@ export type Database = {
         }
         Insert: {
           aadhar_number?: string | null
+          academic_session?: string | null
           account_number?: string | null
           address?: string | null
           admission_date?: string | null
@@ -381,6 +410,7 @@ export type Database = {
         }
         Update: {
           aadhar_number?: string | null
+          academic_session?: string | null
           account_number?: string | null
           address?: string | null
           admission_date?: string | null
