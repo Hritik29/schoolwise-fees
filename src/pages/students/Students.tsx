@@ -31,6 +31,9 @@ export default function Students() {
 
       if (selectedSession) {
         query = query.eq('academic_session', selectedSession);
+      } else {
+        // If no session selected, show all students
+        // but still apply the filter to exclude null sessions if a session is specifically selected
       }
 
       if (searchTerm) {

@@ -42,10 +42,12 @@ export function useAcademicSession() {
 
       setSessions(data || []);
 
-      // Determine default session
+      // Determine default session - prefer active session over stored
       const active = data?.find((s) => s.is_active) || data?.[0] || null;
       const stored = localStorage.getItem(STORAGE_KEY);
-      const initial = stored || active?.session_name || null;
+      
+      // If we have an active session, always use it (override localStorage)
+      const initial = active?.session_name || stored || null;
       setSelectedSession(initial);
       if (initial) localStorage.setItem(STORAGE_KEY, initial);
     } catch (e) {
