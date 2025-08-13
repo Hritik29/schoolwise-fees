@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PrinterIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
+import { useAcademicSession } from "@/hooks/useAcademicSession";
 interface DetailedLedgerProps {
   studentId: string;
   studentInfo: {
@@ -19,6 +19,7 @@ interface DetailedLedgerProps {
 }
 
 export default function DetailedLedger({ studentId, studentInfo }: DetailedLedgerProps) {
+  const { selectedSession } = useAcademicSession();
   const { data: feeDetails } = useQuery({
     queryKey: ['student-fee-details', studentId],
     queryFn: async () => {
@@ -33,15 +34,20 @@ export default function DetailedLedger({ studentId, studentInfo }: DetailedLedge
     }
   });
 
-  const { data: transactions } = useQuery({
-    queryKey: ['student-transactions', studentId],
+const { data: transactions } = useQuery({
+    queryKey: ['student-transactions', studentId, selectedSession],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('fee_transactions')
         .select('*')
         .eq('student_id', studentId)
         .order('transaction_date', { ascending: false });
 
+      if (selectedSession) {
+        query = query.eq('academic_session', selectedSession);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     }

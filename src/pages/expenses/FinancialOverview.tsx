@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, TrendingUp, TrendingDown, DollarSign, Calculator } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfMonth, endOfMonth, isToday } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import SessionSelector from "@/components/SessionSelector";
 
 interface FinancialData {
   totalFeesCollected: number;
@@ -20,6 +22,7 @@ interface FinancialData {
 export default function FinancialOverview() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
   const [financialData, setFinancialData] = useState<FinancialData>({
     totalFeesCollected: 0,
     totalExpenses: 0,
@@ -40,21 +43,29 @@ export default function FinancialOverview() {
       const monthEnd = endOfMonth(new Date(year, month));
       const today = new Date().toISOString().split('T')[0];
 
-      // Fetch total fees collected (from fee_transactions table)
-      const { data: feesData, error: feesError } = await supabase
+// Fetch total fees collected (from fee_transactions table)
+      let feesQuery = supabase
         .from('fee_transactions')
         .select('amount, transaction_date')
         .gte('transaction_date', format(monthStart, 'yyyy-MM-dd'))
         .lte('transaction_date', format(monthEnd, 'yyyy-MM-dd'));
+      if (selectedSession) {
+        feesQuery = feesQuery.eq('academic_session', selectedSession);
+      }
+      const { data: feesData, error: feesError } = await feesQuery;
 
       if (feesError) throw feesError;
 
       // Fetch total expenses
-      const { data: expensesData, error: expensesError } = await supabase
+      let expensesQuery = supabase
         .from('expenses')
         .select('amount, date')
         .gte('date', format(monthStart, 'yyyy-MM-dd'))
         .lte('date', format(monthEnd, 'yyyy-MM-dd'));
+      if (selectedSession) {
+        expensesQuery = expensesQuery.eq('academic_session', selectedSession);
+      }
+      const { data: expensesData, error: expensesError } = await expensesQuery;
 
       if (expensesError) throw expensesError;
 
@@ -106,31 +117,39 @@ export default function FinancialOverview() {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     fetchFinancialData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, selectedSession]);
 
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString()}`;
   };
 
-  return (
+return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={() => navigate('/expense-overview')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">Financial Overview</h1>
-          <p className="text-muted-foreground mt-2">
-            Fee vs Expense Summary and Analytics
-          </p>
+      <div className="flex items-center gap-4 flex-wrap justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/expense-overview')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-foreground">Financial Overview</h1>
+            <p className="text-muted-foreground mt-2">
+              Fee vs Expense Summary and Analytics
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <SessionSelector
+            sessions={sessions}
+            value={selectedSession}
+            onChange={setSelectedSession}
+            className="w-40"
+          />
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Month" />

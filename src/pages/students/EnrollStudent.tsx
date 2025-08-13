@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
 
 interface StudentData {
   fullName: string;
@@ -47,6 +48,7 @@ export default function EnrollStudent() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { selectedSession } = useAcademicSession();
 
   const { data: classFees } = useQuery({
     queryKey: ['class-fees'],
@@ -132,7 +134,7 @@ export default function EnrollStudent() {
     try {
       // Create student record
       // Use the user-provided scholar number as student_id
-      const { data: student, error: studentError } = await supabase
+const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({
           first_name: studentData.fullName,
@@ -154,7 +156,8 @@ export default function EnrollStudent() {
           apar_id: studentData.aparId,
           account_number: studentData.accountNumber,
           ifsc_code: studentData.ifscCode,
-          bank_account_name: studentData.bankAccountName
+          bank_account_name: studentData.bankAccountName,
+          academic_session: selectedSession || null,
         })
         .select()
         .single();

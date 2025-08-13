@@ -10,6 +10,8 @@ import { ArrowLeft, Search, Filter, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import SessionSelector from "@/components/SessionSelector";
 
 interface Expense {
   id: string;
@@ -31,6 +33,7 @@ export default function ViewExpenses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
 
   const categories = [
     "Stationery",
@@ -41,12 +44,18 @@ export default function ViewExpenses() {
     "Others"
   ];
 
-  const fetchExpenses = async () => {
+const fetchExpenses = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
         .order('date', { ascending: false });
+
+      if (selectedSession) {
+        query = query.eq('academic_session', selectedSession);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setExpenses(data || []);
@@ -63,9 +72,9 @@ export default function ViewExpenses() {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [selectedSession]);
 
   useEffect(() => {
     let filtered = expenses;
@@ -141,7 +150,16 @@ export default function ViewExpenses() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Session</label>
+              <SessionSelector
+                sessions={sessions}
+                value={selectedSession}
+                onChange={setSelectedSession}
+                className="w-full"
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
