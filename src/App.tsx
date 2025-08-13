@@ -28,6 +28,7 @@ import ViewExpenses from "./pages/expenses/ViewExpenses";
 import FinancialOverview from "./pages/expenses/FinancialOverview";
 import Login from "./pages/auth/Login";
 import ActivityLogs from "./pages/reports/ActivityLogs";
+import AcademicSessions from "./pages/AcademicSessions";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
                     <Route path="/reports-overview" element={<ReportsOverview />} />
                     <Route path="/reports/fees" element={<FeesReport />} />
                     <Route path="/reports/logs" element={<ActivityLogs />} />
+                    <Route path="/academic-sessions" element={<AcademicSessions />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

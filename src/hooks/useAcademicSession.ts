@@ -9,6 +9,8 @@ export interface AcademicSession {
 }
 
 const STORAGE_KEY = "academic_session";
+const DEFAULT_SESSION_NAME = "2025-26";
+let hasAttemptedSeed = false;
 
 export function useAcademicSession() {
   const [sessions, setSessions] = useState<AcademicSession[]>([]);
@@ -18,11 +20,26 @@ export function useAcademicSession() {
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("academic_sessions")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const selectQuery = () =>
+        supabase
+          .from("academic_sessions")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+      let { data, error } = await selectQuery();
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        if (!hasAttemptedSeed) {
+          hasAttemptedSeed = true;
+          await supabase
+            .from("academic_sessions")
+            .insert({ session_name: DEFAULT_SESSION_NAME, is_active: true });
+          const res2 = await selectQuery();
+          data = res2.data || [];
+        }
+      }
+
       setSessions(data || []);
 
       // Determine default session

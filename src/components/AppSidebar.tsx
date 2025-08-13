@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Settings,
   LogOut,
-  User
+  User,
+  CalendarRange
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
@@ -37,6 +38,7 @@ const menuItems = [
   { title: "Expense Management", url: "/expense-overview", icon: Wallet },
   { title: "Exam Management", url: "/exams-overview", icon: BarChart3 },
   { title: "Reports", url: "/reports-overview", icon: TrendingUp },
+  { title: "Academic Sessions", url: "/academic-sessions", icon: CalendarRange },
   { title: "Settings", url: "/settings", icon: Settings }
 ];
 
