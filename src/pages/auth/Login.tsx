@@ -6,16 +6,16 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/components/AuthProvider";
 export default function Login() {
   const [credentials, setCredentials] = useState({
     email: "",
     password: ""
   });
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
+const [loading, setLoading] = useState(false);
+const { toast } = useToast();
+const navigate = useNavigate();
+const { login } = useAuth();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -37,10 +37,10 @@ export default function Login() {
         throw new Error("Invalid credentials");
       }
 
-      const user = { id: email, email };
-      localStorage.setItem("app_user", JSON.stringify(user));
+const user = { id: email, email };
+login(user);
 
-      // Log the login activity (best-effort)
+// Log the login activity (best-effort)
       try {
         await supabase.from("activity_logs").insert({
           user_email: email,
@@ -52,11 +52,10 @@ export default function Login() {
         });
       } catch {}
 
-      toast({ title: "Success!", description: "Login successful" });
+toast({ title: "Success!", description: "Login successful" });
 
-      // Force full reload to avoid any redirect issues
-      window.location.href = "/";
-    } catch (error: any) {
+navigate("/", { replace: true });
+} catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Invalid credentials",
