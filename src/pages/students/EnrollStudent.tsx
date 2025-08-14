@@ -48,7 +48,7 @@ export default function EnrollStudent() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { selectedSession } = useAcademicSession();
+  const { selectedSession, activeSession } = useAcademicSession();
 
   const { data: classFees } = useQuery({
     queryKey: ['class-fees'],
@@ -157,7 +157,7 @@ const { data: student, error: studentError } = await supabase
           account_number: studentData.accountNumber,
           ifsc_code: studentData.ifscCode,
           bank_account_name: studentData.bankAccountName,
-          academic_session: selectedSession || null,
+          academic_session: activeSession?.session_name || selectedSession,
         })
         .select()
         .single();

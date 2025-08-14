@@ -51,9 +51,7 @@ export default function ManageSessions() {
   const setActive = async (id: string) => {
     setLoading(true);
     try {
-      // Ensure only one active: first deactivate others, then activate selected
-      const { error: offErr } = await supabase.from('academic_sessions').update({ is_active: false }).neq('id', id);
-      if (offErr) throw offErr;
+      // The database trigger will automatically deactivate other sessions
       const { error } = await supabase.from('academic_sessions').update({ is_active: true }).eq('id', id);
       if (error) throw error;
       toast({ title: "Updated", description: "Active session set" });

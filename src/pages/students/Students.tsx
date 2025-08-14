@@ -19,21 +19,21 @@ export default function Students() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
+  const { sessions, selectedSession, setSelectedSession, activeSession } = useAcademicSession();
+
+  // Use active session as default if no session is selected
+  const currentSession = selectedSession || activeSession?.session_name;
 
   const { data: students, isLoading } = useQuery({
-    queryKey: ['students', searchTerm, selectedSession],
+    queryKey: ['students', searchTerm, currentSession],
     queryFn: async () => {
       let query = supabase
         .from('students')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (selectedSession) {
-        query = query.eq('academic_session', selectedSession);
-      } else {
-        // If no session selected, show all students
-        // but still apply the filter to exclude null sessions if a session is specifically selected
+      if (currentSession) {
+        query = query.eq('academic_session', currentSession);
       }
 
       if (searchTerm) {
@@ -121,7 +121,7 @@ export default function Students() {
             </div>
             <SessionSelector
               sessions={sessions}
-              value={selectedSession}
+              value={currentSession}
               onChange={setSelectedSession}
               className="w-40"
             />
