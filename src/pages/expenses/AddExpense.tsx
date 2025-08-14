@@ -55,21 +55,32 @@ export default function AddExpense() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      console.log('Form data before insert:', formData);
+      console.log('Active session:', activeSession);
+      
+      const insertData = {
+        expense_title: formData.expense_title.trim(),
+        category: formData.category,
+        amount: parseFloat(formData.amount),
+        date: format(formData.date, 'yyyy-MM-dd'),
+        description: formData.description?.trim() || '',
+        added_by: formData.added_by.trim(),
+        academic_session: activeSession?.session_name || '2026-27',
+      };
+      
+      console.log('Insert data:', insertData);
+      
+      const { data, error } = await supabase
         .from('expenses')
-        .insert([
-          {
-            expense_title: formData.expense_title,
-            category: formData.category,
-            amount: parseFloat(formData.amount),
-            date: format(formData.date, 'yyyy-MM-dd'),
-            description: formData.description,
-            added_by: formData.added_by,
-            academic_session: activeSession?.session_name || null,
-          }
-        ]);
+        .insert([insertData])
+        .select();
 
-      if (error) throw error;
+      console.log('Insert result:', { data, error });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",

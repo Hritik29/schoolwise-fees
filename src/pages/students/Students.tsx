@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UserPlus, Search, Eye, Edit, Filter, Download } from "lucide-react";
+import { UserPlus, Search, Eye, Edit, Filter, Download, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -87,6 +87,36 @@ export default function Students() {
 
   const handleEditStudent = (student: any) => {
     navigate(`/students/edit/${student.id}`);
+  };
+
+  const handleDeleteStudent = async (student: any) => {
+    if (!confirm(`Are you sure you want to delete ${student.first_name} ${student.last_name}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', student.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Student deleted successfully",
+      });
+
+      // Refetch the data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete student",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -276,6 +306,14 @@ export default function Students() {
                             onClick={() => handleEditStudent(student)}
                           >
                             <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteStudent(student)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
