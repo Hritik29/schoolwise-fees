@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
-import SessionSelector from "@/components/SessionSelector";
 
 interface Expense {
   id: string;
@@ -33,7 +32,7 @@ export default function ViewExpenses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
+  const { activeSession } = useAcademicSession();
 
   const categories = [
     "Stationery",
@@ -51,8 +50,8 @@ const fetchExpenses = async () => {
         .select('*')
         .order('date', { ascending: false });
 
-      if (selectedSession) {
-        query = query.eq('academic_session', selectedSession);
+      if (activeSession) {
+        query = query.eq('academic_session', activeSession.session_name);
       }
 
       const { data, error } = await query;
@@ -74,7 +73,7 @@ const fetchExpenses = async () => {
 
 useEffect(() => {
     fetchExpenses();
-  }, [selectedSession]);
+  }, [activeSession]);
 
   useEffect(() => {
     let filtered = expenses;
@@ -152,13 +151,10 @@ useEffect(() => {
         <CardContent>
 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Session</label>
-              <SessionSelector
-                sessions={sessions}
-                value={selectedSession}
-                onChange={setSelectedSession}
-                className="w-full"
-              />
+              <label className="text-sm font-medium">Active Session</label>
+              <div className="text-sm text-muted-foreground p-2 border rounded">
+                {activeSession?.session_name || 'No active session'}
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>

@@ -12,17 +12,16 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { exportStudentsToExcel } from "@/utils/exportToExcel";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
-import SessionSelector from "@/components/SessionSelector";
 
 export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sessions, selectedSession, setSelectedSession, activeSession } = useAcademicSession();
+  const { activeSession } = useAcademicSession();
 
-  // Use active session as default if no session is selected
-  const currentSession = selectedSession || activeSession?.session_name;
+  // Use only active session
+  const currentSession = activeSession?.session_name;
 
   const { data: students, isLoading } = useQuery({
     queryKey: ['students', searchTerm, currentSession],
@@ -119,12 +118,9 @@ export default function Students() {
                 className="pl-10"
               />
             </div>
-            <SessionSelector
-              sessions={sessions}
-              value={currentSession}
-              onChange={setSelectedSession}
-              className="w-40"
-            />
+            <div className="text-sm text-muted-foreground">
+              Active Session: {currentSession || 'No active session'}
+            </div>
             <Button variant="outline" size="sm">
               Filter
             </Button>

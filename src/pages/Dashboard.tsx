@@ -8,11 +8,14 @@ export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [studentsResult, feesResult, transactionsResult, expensesResult] = await Promise.all([
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [studentsResult, feesResult, transactionsResult, expensesResult, todaysTransactionsResult] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact' }),
         supabase.from('student_fees').select('total_amount, paid_amount, outstanding_amount'),
         supabase.from('fee_transactions').select('amount, transaction_date'),
-        supabase.from('expenses').select('amount, date')
+        supabase.from('expenses').select('amount, date'),
+        supabase.from('fee_transactions').select('amount').eq('transaction_date', today)
       ]);
 
       const totalStudents = studentsResult.count || 0;
@@ -24,7 +27,6 @@ export default function Dashboard() {
       
       const thisMonth = new Date().getMonth();
       const thisYear = new Date().getFullYear();
-      const today = new Date().toDateString();
       
       const monthlyCollection = (transactionsResult.data || [])
         .filter(t => {
@@ -33,10 +35,11 @@ export default function Dashboard() {
         })
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
-      // Calculate total and today's expenses
+      // Calculate today's collection and total expenses
+      const todaysCollection = (todaysTransactionsResult.data || []).reduce((sum, t) => sum + Number(t.amount), 0);
       const totalExpense = (expensesResult.data || []).reduce((sum, exp) => sum + Number(exp.amount), 0);
       const todaysExpense = (expensesResult.data || [])
-        .filter(exp => new Date(exp.date).toDateString() === today)
+        .filter(exp => exp.date === today)
         .reduce((sum, exp) => sum + Number(exp.amount), 0);
 
       return {
@@ -47,9 +50,10 @@ export default function Dashboard() {
         monthlyCollection,
         totalExpense,
         todaysExpense,
-        collectionRate: totalFees > 0 ? (totalCollected / totalFees) * 100 : 0
+        todaysCollection
       };
-    }
+    },
+    refetchInterval: 30000 // Refresh every 30 seconds for real-time data
   });
 
   const statCards = [
@@ -89,11 +93,11 @@ export default function Dashboard() {
       color: "text-warning"
     },
     {
-      title: "Collection Rate",
-      value: `${(stats?.collectionRate || 0).toFixed(1)}%`,
-      icon: GraduationCap,
-      description: "Overall collection percentage",
-      color: "text-primary"
+      title: "Today's Collection",
+      value: `₹${(stats?.todaysCollection || 0).toLocaleString()}`,
+      icon: CreditCard,
+      description: "Real-time today's collection",
+      color: "text-success"
     },
     {
       title: "Total Expense",
@@ -238,7 +242,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">{(stats?.collectionRate || 0).toFixed(1)}% collection rate</p>
+            <p className="text-sm text-muted-foreground mb-4">Analytics and insights</p>
             <a 
               href="/fees/insights" 
               className="inline-flex items-center justify-center w-full h-10 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors font-medium"

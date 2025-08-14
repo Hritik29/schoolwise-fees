@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAcademicSession } from "@/hooks/useAcademicSession";
-import SessionSelector from "@/components/SessionSelector";
 
 interface FinancialData {
   totalFeesCollected: number;
@@ -22,7 +21,7 @@ interface FinancialData {
 export default function FinancialOverview() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
+  const { activeSession } = useAcademicSession();
   const [financialData, setFinancialData] = useState<FinancialData>({
     totalFeesCollected: 0,
     totalExpenses: 0,
@@ -49,8 +48,8 @@ export default function FinancialOverview() {
         .select('amount, transaction_date')
         .gte('transaction_date', format(monthStart, 'yyyy-MM-dd'))
         .lte('transaction_date', format(monthEnd, 'yyyy-MM-dd'));
-      if (selectedSession) {
-        feesQuery = feesQuery.eq('academic_session', selectedSession);
+      if (activeSession) {
+        feesQuery = feesQuery.eq('academic_session', activeSession.session_name);
       }
       const { data: feesData, error: feesError } = await feesQuery;
 
@@ -62,8 +61,8 @@ export default function FinancialOverview() {
         .select('amount, date')
         .gte('date', format(monthStart, 'yyyy-MM-dd'))
         .lte('date', format(monthEnd, 'yyyy-MM-dd'));
-      if (selectedSession) {
-        expensesQuery = expensesQuery.eq('academic_session', selectedSession);
+      if (activeSession) {
+        expensesQuery = expensesQuery.eq('academic_session', activeSession.session_name);
       }
       const { data: expensesData, error: expensesError } = await expensesQuery;
 
@@ -119,7 +118,7 @@ export default function FinancialOverview() {
 
 useEffect(() => {
     fetchFinancialData();
-  }, [selectedMonth, selectedYear, selectedSession]);
+  }, [selectedMonth, selectedYear, activeSession]);
 
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString()}`;
@@ -144,12 +143,9 @@ return (
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          <SessionSelector
-            sessions={sessions}
-            value={selectedSession}
-            onChange={setSelectedSession}
-            className="w-40"
-          />
+          <div className="text-sm text-muted-foreground px-3 py-2 border rounded">
+            Active Session: {activeSession?.session_name || 'No active session'}
+          </div>
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Month" />

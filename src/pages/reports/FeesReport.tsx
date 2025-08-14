@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { exportFeesDataToExcel } from "@/utils/exportToExcel";
 import { Badge } from "@/components/ui/badge";
 import { 
   BarChart, 
@@ -24,7 +30,6 @@ import {
   TrendingDown, 
   IndianRupee, 
   Users, 
-  Calendar,
   Download,
   Filter,
   RefreshCw
@@ -35,6 +40,8 @@ import { supabase } from "@/integrations/supabase/client";
 export default function FeesReport() {
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedClass, setSelectedClass] = useState("all");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
 
   // Real-time fee data fetching
   const { data: feesData, isLoading, refetch } = useQuery({
@@ -101,8 +108,36 @@ export default function FeesReport() {
   const avgTransactionAmount = totalTransactions > 0 ? totalCollected / totalTransactions : 0;
 
   const handleExport = () => {
-    // Export logic would go here
-    console.log("Exporting fees report...");
+    if (!feesData || feesData.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    // Format data for Excel export
+    const exportData = feesData.map(transaction => ({
+      'Transaction Date': new Date(transaction.transaction_date).toLocaleDateString(),
+      'Student Name': transaction.students ? 
+        `${transaction.students.first_name} ${transaction.students.last_name}` : 'Unknown',
+      'Class': transaction.students?.class_grade || 'N/A',
+      'Section': transaction.students?.section || 'N/A',
+      'Fee Type': transaction.applied_to_fee_type?.replace('_', ' ') || 'General',
+      'Amount': transaction.amount,
+      'Payment Method': transaction.payment_method,
+      'Reference Number': transaction.reference_number || 'N/A',
+      'Remarks': transaction.remarks || 'N/A',
+      'Created By': transaction.created_by || 'N/A',
+      'Academic Session': transaction.academic_session || 'N/A'
+    }));
+
+    // Create filename with date range if specified
+    let filename = 'fees-report';
+    if (startDate && endDate) {
+      filename += `-${format(startDate, 'yyyy-MM-dd')}-to-${format(endDate, 'yyyy-MM-dd')}`;
+    } else if (selectedMonth !== 'all') {
+      filename += `-${new Date().getFullYear()}-${selectedMonth.padStart(2, '0')}`;
+    }
+    
+    exportFeesDataToExcel(exportData);
   };
 
   const currentMonth = new Date().toLocaleString('default', { month: 'long' });
@@ -186,12 +221,54 @@ export default function FeesReport() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateRange">Date Range</Label>
-              <Input
-                id="dateRange"
-                type="date"
-                defaultValue={new Date().toISOString().split('T')[0]}
-              />
+              <Label>Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : <span>Pick start date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label>End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : <span>Pick end date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
@@ -243,7 +320,7 @@ export default function FeesReport() {
                 <p className="text-2xl font-bold">₹{Math.round(avgTransactionAmount).toLocaleString()}</p>
               </div>
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-purple-600" />
+                <Users className="w-5 h-5 text-purple-600" />
               </div>
             </div>
             <div className="flex items-center mt-2">

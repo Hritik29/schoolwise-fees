@@ -38,6 +38,8 @@ export default function AddExpense() {
     "Other"
   ];
 
+  const { activeSession } = useAcademicSession();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -63,6 +65,7 @@ export default function AddExpense() {
             date: format(formData.date, 'yyyy-MM-dd'),
             description: formData.description,
             added_by: formData.added_by,
+            academic_session: activeSession?.session_name || null,
           }
         ]);
 

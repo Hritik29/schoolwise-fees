@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ReceiptSlip from "@/components/ReceiptSlip";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
-import SessionSelector from "@/components/SessionSelector";
 
 interface SelectedStudent {
   id: string;
@@ -50,10 +49,10 @@ export default function DepositFees() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<any>(null);
   const { toast } = useToast();
-  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
+  const { activeSession } = useAcademicSession();
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: ['student-search', searchTerm, selectedSession],
+    queryKey: ['student-search', searchTerm, activeSession],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return [];
 
@@ -63,8 +62,8 @@ export default function DepositFees() {
         .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,student_id.ilike.%${searchTerm}%`)
         .eq('status', 'active');
 
-      if (selectedSession) {
-        query = query.eq('academic_session', selectedSession);
+      if (activeSession) {
+        query = query.eq('academic_session', activeSession.session_name);
       }
 
       const { data, error } = await query.limit(10);
@@ -131,7 +130,7 @@ export default function DepositFees() {
           created_by: paymentData.payerName,
           fee_type: paymentData.feeType,
           applied_to_fee_type: paymentData.feeType,
-          academic_session: selectedSession || null,
+          academic_session: activeSession?.session_name || null,
         })
         .select()
         .single();
@@ -187,12 +186,9 @@ export default function DepositFees() {
             <p className="text-muted-foreground">Record fee payments for students</p>
           </div>
         </div>
-        <SessionSelector
-          sessions={sessions}
-          value={selectedSession}
-          onChange={setSelectedSession}
-          className="w-40"
-        />
+        <div className="text-sm text-muted-foreground">
+          Active Session: {activeSession?.session_name || 'No active session'}
+        </div>
       </div>
 
       {!selectedStudent ? (

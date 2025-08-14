@@ -64,7 +64,8 @@ export default function PromoteStudents() {
         return;
       }
       setStudents(data || []);
-      setSelectedIds([]);
+      // Select all students by default
+      setSelectedIds((data || []).map(s => s.id));
     };
     fetchStudents();
   }, [fromSession, fromClass]);
@@ -84,7 +85,7 @@ export default function PromoteStudents() {
       const rows = selected.map((s) => ({
         first_name: s.first_name,
         last_name: s.last_name,
-        student_id: s.student_id,
+        student_id: `${s.student_id}-${toSession}`, // Make student_id unique by appending session
         class_grade: toClass,
         section: s.section,
         parent_name: s.parent_name,
