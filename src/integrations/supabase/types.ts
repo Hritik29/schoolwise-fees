@@ -356,7 +356,7 @@ export type Database = {
       students: {
         Row: {
           aadhar_number: string | null
-          academic_session: string | null
+          academic_session: string
           account_number: string | null
           address: string | null
           admission_date: string | null
@@ -383,7 +383,7 @@ export type Database = {
         }
         Insert: {
           aadhar_number?: string | null
-          academic_session?: string | null
+          academic_session: string
           account_number?: string | null
           address?: string | null
           admission_date?: string | null
@@ -410,7 +410,7 @@ export type Database = {
         }
         Update: {
           aadhar_number?: string | null
-          academic_session?: string | null
+          academic_session?: string
           account_number?: string | null
           address?: string | null
           admission_date?: string | null
