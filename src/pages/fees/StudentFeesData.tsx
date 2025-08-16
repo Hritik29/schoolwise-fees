@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import SessionSelector from "@/components/SessionSelector";
 import { exportFeesDataToExcel } from "@/utils/exportToExcel";
 import DetailedLedger from "@/components/DetailedLedger";
 
@@ -33,6 +35,7 @@ interface StudentFeeData {
 }
 
 export default function StudentFeesData() {
+  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
@@ -40,8 +43,10 @@ export default function StudentFeesData() {
   const { toast } = useToast();
 
   const { data: feesData, isLoading } = useQuery({
-    queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter],
+    queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter, selectedSession],
     queryFn: async () => {
+      if (!selectedSession) return [];
+      
       let query = supabase
         .from('student_fees')
         .select(`
@@ -53,9 +58,11 @@ export default function StudentFeesData() {
             class_grade,
             section,
             parent_name,
-            parent_phone
+            parent_phone,
+            academic_session
           )
         `)
+        .eq('students.academic_session', selectedSession)
         .order('created_at', { ascending: false });
 
       if (searchTerm && searchTerm.trim() !== "") {
@@ -111,7 +118,8 @@ export default function StudentFeesData() {
       const { data, error } = await query;
       if (error) throw error;
       return data as StudentFeeData[];
-    }
+    },
+    enabled: !!selectedSession
   });
 
 
@@ -169,45 +177,58 @@ export default function StudentFeesData() {
           <CardDescription>Complete overview of student fee payments</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-6 flex-wrap">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+          <div className="grid gap-4 md:grid-cols-4 mb-6">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Academic Session</label>
+              <SessionSelector 
+                sessions={sessions}
+                value={selectedSession}
+                onChange={setSelectedSession}
               />
             </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Class" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
-            </Button>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Class</label>
+              <Select value={classFilter} onValueChange={setClassFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mb-6">
             <Button onClick={handleExportToExcel} variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               Export to Excel

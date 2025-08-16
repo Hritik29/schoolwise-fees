@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
@@ -47,6 +49,7 @@ export default function PromoteStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [feeIncreasePercentage, setFeeIncreasePercentage] = useState<number>(0);
 
   useEffect(() => { document.title = "Promote Students"; }, []);
 
@@ -79,10 +82,18 @@ export default function PromoteStudents() {
       toast({ title: 'Select required fields', description: 'Pick students, target class and session', variant: 'destructive' });
       return;
     }
+    
+    if (feeIncreasePercentage < 0 || feeIncreasePercentage > 20) {
+      toast({ title: 'Invalid percentage', description: 'Fee increase must be between 0-20%', variant: 'destructive' });
+      return;
+    }
+    
     setLoading(true);
     try {
       const selected = students.filter(s => selectedIds.includes(s.id));
-      const rows = selected.map((s) => ({
+      
+      // Step 1: Promote students
+      const studentRows = selected.map((s) => ({
         first_name: s.first_name,
         last_name: s.last_name,
         student_id: `${s.student_id}-${toSession}`, // Make student_id unique by appending session
@@ -106,11 +117,83 @@ export default function PromoteStudents() {
         academic_session: toSession,
       }));
 
-      const { error } = await supabase.from('students').insert(rows);
-      if (error) throw error;
+      const { data: newStudents, error: studentError } = await supabase
+        .from('students')
+        .insert(studentRows)
+        .select();
+      
+      if (studentError) throw studentError;
 
-      toast({ title: 'Success', description: 'Students promoted to new session/class' });
+      // Step 2: Fetch current fee details and calculate new fees
+      const oldStudentIds = selected.map(s => s.id);
+      const { data: currentFeeDetails, error: feeDetailsError } = await supabase
+        .from('student_fee_details')
+        .select('*')
+        .in('student_id', oldStudentIds);
+
+      if (feeDetailsError) throw feeDetailsError;
+
+      // Step 3: Create new fee details with increased amounts and previous year fees
+      const newFeeDetails = [];
+      for (let i = 0; i < newStudents.length; i++) {
+        const newStudent = newStudents[i];
+        const oldStudent = selected[i];
+        const oldFeeDetail = currentFeeDetails?.find(f => f.student_id === oldStudent.id);
+
+        if (oldFeeDetail) {
+          // Calculate new total amount with percentage increase
+          const increaseFactor = 1 + (feeIncreasePercentage / 100);
+          const newTotalAmount = oldFeeDetail.total_amount * increaseFactor;
+          
+          newFeeDetails.push({
+            student_id: newStudent.id,
+            fee_type: oldFeeDetail.fee_type,
+            total_amount: newTotalAmount,
+            paid_amount: 0,
+            outstanding_amount: newTotalAmount + oldFeeDetail.outstanding_amount,
+            previous_year_fees: oldFeeDetail.outstanding_amount,
+            academic_year: toSession
+          });
+        } else {
+          // If no existing fee details, create basic structure
+          const { data: feeStructure } = await supabase
+            .from('class_fee_structures')
+            .select('tuition_fee_yearly')
+            .eq('class_grade', toClass)
+            .eq('is_active', true)
+            .single();
+
+          const baseFee = feeStructure?.tuition_fee_yearly || 0;
+          const increaseFactor = 1 + (feeIncreasePercentage / 100);
+          const newTotalAmount = baseFee * increaseFactor;
+
+          newFeeDetails.push({
+            student_id: newStudent.id,
+            fee_type: 'tuition',
+            total_amount: newTotalAmount,
+            paid_amount: 0,
+            outstanding_amount: newTotalAmount,
+            previous_year_fees: 0,
+            academic_year: toSession
+          });
+        }
+      }
+
+      // Insert new fee details
+      if (newFeeDetails.length > 0) {
+        const { error: newFeeDetailsError } = await supabase
+          .from('student_fee_details')
+          .insert(newFeeDetails);
+
+        if (newFeeDetailsError) throw newFeeDetailsError;
+      }
+
+      toast({ 
+        title: 'Success', 
+        description: `${selected.length} students promoted to ${toSession} ${toClass} with ${feeIncreasePercentage}% fee increase` 
+      });
       setSelectedIds([]);
+      setFeeIncreasePercentage(0);
     } catch (e: any) {
       toast({ title: 'Error', description: e.message || 'Promotion failed', variant: 'destructive' });
     } finally {
@@ -170,6 +253,18 @@ export default function PromoteStudents() {
                 {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="feeIncrease" className="text-sm font-medium">Fee Increase Percentage (0-20%)</Label>
+            <Input
+              id="feeIncrease"
+              type="number"
+              min="0"
+              max="20"
+              value={feeIncreasePercentage}
+              onChange={(e) => setFeeIncreasePercentage(Number(e.target.value))}
+              placeholder="Enter percentage (0-20)"
+            />
           </div>
         </CardContent>
       </Card>

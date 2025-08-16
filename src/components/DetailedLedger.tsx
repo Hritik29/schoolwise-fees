@@ -94,6 +94,7 @@ const { data: transactions } = useQuery({
       total_amount: existingFee?.total_amount || 0,
       paid_amount: existingFee?.paid_amount || 0,
       outstanding_amount: existingFee?.outstanding_amount || 0,
+      previous_year_fees: existingFee?.previous_year_fees || 0,
       id: existingFee?.id || `${feeType.type}-placeholder`
     };
   });
@@ -101,6 +102,8 @@ const { data: transactions } = useQuery({
   const totalFees = completeFeeBreakdown.reduce((sum, fee) => sum + fee.total_amount, 0);
   const totalPaid = completeFeeBreakdown.reduce((sum, fee) => sum + fee.paid_amount, 0);
   const totalOutstanding = completeFeeBreakdown.reduce((sum, fee) => sum + fee.outstanding_amount, 0);
+  const totalPreviousYearFees = completeFeeBreakdown.reduce((sum, fee) => sum + (fee.previous_year_fees || 0), 0);
+  const currentYearFees = totalFees - totalPreviousYearFees;
 
   return (
     <div className="space-y-6">
@@ -183,18 +186,28 @@ const { data: transactions } = useQuery({
           
           {/* Summary Totals */}
           <div className="mt-6 pt-4 border-t">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Total Fees</p>
-                <p className="text-xl font-bold">₹{totalFees.toLocaleString()}</p>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-600">Current Year Fees</p>
+                  <p className="text-xl font-bold text-blue-700">₹{currentYearFees.toLocaleString()}</p>
+                </div>
+                {totalPreviousYearFees > 0 && (
+                  <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <p className="text-sm font-medium text-orange-600">Previous Year Fees</p>
+                    <p className="text-xl font-bold text-orange-700">₹{totalPreviousYearFees.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
-              <div className="text-center p-3 bg-success/10 rounded-lg border border-success/20">
-                <p className="text-sm text-success">Total Paid</p>
-                <p className="text-xl font-bold text-success">₹{totalPaid.toLocaleString()}</p>
-              </div>
-              <div className="text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
-                <p className="text-sm text-destructive">Total Outstanding</p>
-                <p className="text-xl font-bold text-destructive">₹{totalOutstanding.toLocaleString()}</p>
+              <div className="space-y-3">
+                <div className="text-center p-3 bg-success/10 rounded-lg border border-success/20">
+                  <p className="text-sm text-success">Total Paid</p>
+                  <p className="text-xl font-bold text-success">₹{totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                  <p className="text-sm text-destructive">Total Outstanding</p>
+                  <p className="text-xl font-bold text-destructive">₹{totalOutstanding.toLocaleString()}</p>
+                </div>
               </div>
             </div>
           </div>

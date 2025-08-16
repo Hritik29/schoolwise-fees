@@ -271,6 +271,7 @@ export type Database = {
           id: string
           outstanding_amount: number
           paid_amount: number
+          previous_year_fees: number
           student_id: string
           total_amount: number
           updated_at: string
@@ -282,6 +283,7 @@ export type Database = {
           id?: string
           outstanding_amount?: number
           paid_amount?: number
+          previous_year_fees?: number
           student_id: string
           total_amount?: number
           updated_at?: string
@@ -293,6 +295,7 @@ export type Database = {
           id?: string
           outstanding_amount?: number
           paid_amount?: number
+          previous_year_fees?: number
           student_id?: string
           total_amount?: number
           updated_at?: string
