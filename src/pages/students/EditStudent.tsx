@@ -6,17 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useAcademicSession } from "@/hooks/useAcademicSession";
+import FeeManagement from "@/components/FeeManagement";
 
 export default function EditStudent() {
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { activeSession } = useAcademicSession();
 
   const { data: student, isLoading } = useQuery({
     queryKey: ['student', id],
@@ -326,6 +330,17 @@ export default function EditStudent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Fee Management Section */}
+      {student && activeSession && (
+        <>
+          <Separator className="my-6" />
+          <FeeManagement 
+            studentId={student.id} 
+            academicSession={activeSession.session_name}
+          />
+        </>
+      )}
     </div>
   );
 }
