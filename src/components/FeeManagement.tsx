@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/contexts/SessionContext";
 
 interface FeeDetail {
   id?: string;
@@ -43,6 +44,7 @@ export default function FeeManagement({ studentId, academicSession, onUpdate }: 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
+  const { currentSessionId } = useSession();
 
   const [newFee, setNewFee] = useState({
     fee_type: "",
@@ -99,7 +101,8 @@ export default function FeeManagement({ studentId, academicSession, onUpdate }: 
           paid_amount: 0,
           outstanding_amount: outstanding,
           previous_year_fees: newFee.previous_year_fees,
-          academic_year: academicSession
+          academic_year: academicSession,
+          session_id: currentSessionId,
         });
 
       if (error) throw error;

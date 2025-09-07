@@ -130,6 +130,7 @@ export type Database = {
           description: string | null
           expense_title: string
           id: string
+          session_id: string
           updated_at: string
         }
         Insert: {
@@ -142,6 +143,7 @@ export type Database = {
           description?: string | null
           expense_title: string
           id?: string
+          session_id: string
           updated_at?: string
         }
         Update: {
@@ -154,9 +156,18 @@ export type Database = {
           description?: string | null
           expense_title?: string
           id?: string
+          session_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fee_structures: {
         Row: {
@@ -207,6 +218,7 @@ export type Database = {
           payment_method: string
           reference_number: string | null
           remarks: string | null
+          session_id: string
           student_fee_id: string
           student_id: string
           transaction_date: string
@@ -224,6 +236,7 @@ export type Database = {
           payment_method?: string
           reference_number?: string | null
           remarks?: string | null
+          session_id: string
           student_fee_id: string
           student_id: string
           transaction_date?: string
@@ -241,12 +254,20 @@ export type Database = {
           payment_method?: string
           reference_number?: string | null
           remarks?: string | null
+          session_id?: string
           student_fee_id?: string
           student_id?: string
           transaction_date?: string
           transaction_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fee_transactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fee_transactions_student_fee_id_fkey"
             columns: ["student_fee_id"]
@@ -272,6 +293,7 @@ export type Database = {
           outstanding_amount: number
           paid_amount: number
           previous_year_fees: number
+          session_id: string
           student_id: string
           total_amount: number
           updated_at: string
@@ -284,6 +306,7 @@ export type Database = {
           outstanding_amount?: number
           paid_amount?: number
           previous_year_fees?: number
+          session_id: string
           student_id: string
           total_amount?: number
           updated_at?: string
@@ -296,11 +319,20 @@ export type Database = {
           outstanding_amount?: number
           paid_amount?: number
           previous_year_fees?: number
+          session_id?: string
           student_id?: string
           total_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_fee_details_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_fees: {
         Row: {
@@ -310,6 +342,7 @@ export type Database = {
           id: string
           outstanding_amount: number
           paid_amount: number
+          session_id: string
           status: string
           student_id: string
           total_amount: number
@@ -322,6 +355,7 @@ export type Database = {
           id?: string
           outstanding_amount: number
           paid_amount?: number
+          session_id: string
           status?: string
           student_id: string
           total_amount: number
@@ -334,6 +368,7 @@ export type Database = {
           id?: string
           outstanding_amount?: number
           paid_amount?: number
+          session_id?: string
           status?: string
           student_id?: string
           total_amount?: number
@@ -345,6 +380,13 @@ export type Database = {
             columns: ["fee_structure_id"]
             isOneToOne: false
             referencedRelation: "fee_structures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fees_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -379,6 +421,7 @@ export type Database = {
           parent_phone: string
           phone: string | null
           section: string | null
+          session_id: string
           sssm_id: string | null
           status: string
           student_id: string
@@ -406,6 +449,7 @@ export type Database = {
           parent_phone: string
           phone?: string | null
           section?: string | null
+          session_id: string
           sssm_id?: string | null
           status?: string
           student_id: string
@@ -433,12 +477,21 @@ export type Database = {
           parent_phone?: string
           phone?: string | null
           section?: string | null
+          session_id?: string
           sssm_id?: string | null
           status?: string
           student_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

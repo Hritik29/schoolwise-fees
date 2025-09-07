@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ReceiptSlip from "@/components/ReceiptSlip";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
+import { useSession } from "@/contexts/SessionContext";
 
 interface SelectedStudent {
   id: string;
@@ -50,6 +51,7 @@ export default function DepositFees() {
   const [lastTransaction, setLastTransaction] = useState<any>(null);
   const { toast } = useToast();
   const { activeSession } = useAcademicSession();
+  const { currentSessionId } = useSession();
 
   const { data: searchResults, isLoading: searchLoading } = useQuery({
     queryKey: ['student-search', searchTerm, activeSession],
@@ -131,6 +133,7 @@ export default function DepositFees() {
           fee_type: paymentData.feeType,
           applied_to_fee_type: paymentData.feeType,
           academic_session: activeSession?.session_name || null,
+          session_id: currentSessionId || activeSession?.id || null,
         })
         .select()
         .single();

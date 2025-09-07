@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
+import GlobalSessionSelector from "@/components/GlobalSessionSelector";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,8 +25,8 @@ export function Layout({ children }: LayoutProps) {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Active Session</p>
-                <p className="text-sm font-medium">{activeSession?.session_name || 'No active session'}</p>
+                <p className="text-xs text-muted-foreground">Academic Session</p>
+                <GlobalSessionSelector className="w-48" />
               </div>
             </div>
           </header>

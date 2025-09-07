@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function AddExpense() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function AddExpense() {
   ];
 
   const { activeSession } = useAcademicSession();
+  const { currentSessionId } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +68,7 @@ export default function AddExpense() {
         description: formData.description?.trim() || '',
         added_by: formData.added_by.trim(),
         academic_session: activeSession?.session_name || '2026-27',
+        session_id: currentSessionId || activeSession?.id || null,
       };
       
       console.log('Insert data:', insertData);

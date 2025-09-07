@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAcademicSession } from "@/hooks/useAcademicSession";
+import { useSession } from "@/contexts/SessionContext";
 
 interface StudentData {
   fullName: string;
@@ -49,6 +50,7 @@ export default function EnrollStudent() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { selectedSession, activeSession } = useAcademicSession();
+  const { currentSessionId } = useSession();
 
   const { data: classFees } = useQuery({
     queryKey: ['class-fees'],
@@ -158,6 +160,7 @@ const { data: student, error: studentError } = await supabase
           ifsc_code: studentData.ifscCode,
           bank_account_name: studentData.bankAccountName,
           academic_session: activeSession?.session_name || selectedSession,
+          session_id: currentSessionId || activeSession?.id || null,
         })
         .select()
         .single();
@@ -186,7 +189,8 @@ const { data: student, error: studentError } = await supabase
             fee_type: fee.type,
             total_amount: finalAmount,
             paid_amount: 0,
-            outstanding_amount: finalAmount
+            outstanding_amount: finalAmount,
+            session_id: currentSessionId || activeSession?.id || null,
           });
       }
 
@@ -215,7 +219,8 @@ const { data: student, error: studentError } = await supabase
           total_amount: totalAmount,
           paid_amount: 0,
           outstanding_amount: totalAmount,
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+          session_id: currentSessionId || activeSession?.id || null,
         });
 
       if (studentFeesError) throw studentFeesError;

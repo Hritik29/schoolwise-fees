@@ -119,7 +119,7 @@ export default function StudentFeesData() {
       if (error) throw error;
       return data as StudentFeeData[];
     },
-    enabled: !!selectedSession
+    enabled: !!currentSessionId
   });
 
 

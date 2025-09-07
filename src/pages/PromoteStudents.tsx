@@ -93,6 +93,13 @@ export default function PromoteStudents() {
       const selected = students.filter(s => selectedIds.includes(s.id));
       
       // Step 1: Promote students
+      const toSessionId = sessions.find(s => s.session_name === toSession)?.id;
+      
+      if (!toSessionId) {
+        toast({ title: 'Session not found', description: 'Target session ID not found', variant: 'destructive' });
+        return;
+      }
+
       const studentRows = selected.map((s) => ({
         first_name: s.first_name,
         last_name: s.last_name,
@@ -115,6 +122,7 @@ export default function PromoteStudents() {
         ifsc_code: s.ifsc_code,
         bank_account_name: s.bank_account_name,
         academic_session: toSession,
+        session_id: toSessionId,
       }));
 
       const { data: newStudents, error: studentError } = await supabase
