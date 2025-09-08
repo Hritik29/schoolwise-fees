@@ -10,8 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAcademicSession } from "@/hooks/useAcademicSession";
-import SessionSelector from "@/components/SessionSelector";
+import { useSession } from "@/contexts/SessionContext";
+import GlobalSessionSelector from "@/components/GlobalSessionSelector";
 import { exportFeesDataToExcel } from "@/utils/exportToExcel";
 import DetailedLedger from "@/components/DetailedLedger";
 
@@ -35,7 +35,7 @@ interface StudentFeeData {
 }
 
 export default function StudentFeesData() {
-  const { sessions, selectedSession, setSelectedSession } = useAcademicSession();
+  const { currentSessionId, sessions } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
@@ -43,9 +43,9 @@ export default function StudentFeesData() {
   const { toast } = useToast();
 
   const { data: feesData, isLoading } = useQuery({
-    queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter, selectedSession],
+    queryKey: ['student-fees-data', searchTerm, statusFilter, classFilter, currentSessionId],
     queryFn: async () => {
-      if (!selectedSession) return [];
+      if (!currentSessionId) return [];
       
       let query = supabase
         .from('student_fees')
@@ -62,7 +62,7 @@ export default function StudentFeesData() {
             academic_session
           )
         `)
-        .eq('students.academic_session', selectedSession)
+        .eq('session_id', currentSessionId)
         .order('created_at', { ascending: false });
 
       if (searchTerm && searchTerm.trim() !== "") {
@@ -180,11 +180,7 @@ export default function StudentFeesData() {
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <div>
               <label className="text-sm font-medium mb-2 block">Academic Session</label>
-              <SessionSelector 
-                sessions={sessions}
-                value={selectedSession}
-                onChange={setSelectedSession}
-              />
+              <GlobalSessionSelector />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Search</label>
