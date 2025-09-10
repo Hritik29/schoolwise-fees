@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAcademicSession } from "@/hooks/useAcademicSession";
+import { useSession } from "@/contexts/SessionContext";
 
 interface Student {
   id: string;
@@ -41,9 +41,10 @@ const CLASS_OPTIONS = [
 
 export default function PromoteStudents() {
   const { toast } = useToast();
-  const { sessions, selectedSession } = useAcademicSession();
-  const [fromSession, setFromSession] = useState<string | null>(selectedSession);
-  const [toSession, setToSession] = useState<string | null>(selectedSession);
+  const { sessions, currentSessionId } = useSession();
+  const currentSessionName = sessions.find(s => s.id === currentSessionId)?.session_name;
+  const [fromSession, setFromSession] = useState<string | null>(currentSessionName || null);
+  const [toSession, setToSession] = useState<string | null>(currentSessionName || null);
   const [fromClass, setFromClass] = useState<string>("");
   const [toClass, setToClass] = useState<string>("");
   const [students, setStudents] = useState<Student[]>([]);
@@ -56,10 +57,14 @@ export default function PromoteStudents() {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!fromSession || !fromClass) { setStudents([]); return; }
+      
+      const fromSessionId = sessions.find(s => s.session_name === fromSession)?.id;
+      if (!fromSessionId) { setStudents([]); return; }
+      
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .eq('academic_session', fromSession)
+        .eq('session_id', fromSessionId)
         .eq('class_grade', fromClass)
         .order('first_name');
       if (error) {
@@ -132,16 +137,35 @@ export default function PromoteStudents() {
       
       if (studentError) throw studentError;
 
-      // Step 2: Fetch current fee details and calculate new fees
+      // Step 2: Check if fee template exists for target class
+      const { data: feeTemplate } = await supabase
+        .from('class_fee_structures')
+        .select('tuition_fee_yearly')
+        .eq('class_grade', toClass)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!feeTemplate) {
+        toast({ 
+          title: 'No fee template found', 
+          description: `Please create a fee structure for ${toClass} class before promoting students`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      // Step 3: Fetch current fee details and calculate new fees
       const oldStudentIds = selected.map(s => s.id);
+      const fromSessionId = sessions.find(s => s.session_name === fromSession)?.id;
       const { data: currentFeeDetails, error: feeDetailsError } = await supabase
         .from('student_fee_details')
         .select('*')
-        .in('student_id', oldStudentIds);
+        .in('student_id', oldStudentIds)
+        .eq('session_id', fromSessionId);
 
       if (feeDetailsError) throw feeDetailsError;
 
-      // Step 3: Create new fee details with increased amounts and previous year fees
+      // Step 4: Create new fee details with increased amounts and previous year fees
       const newFeeDetails = [];
       for (let i = 0; i < newStudents.length; i++) {
         const newStudent = newStudents[i];
@@ -155,6 +179,7 @@ export default function PromoteStudents() {
           
           newFeeDetails.push({
             student_id: newStudent.id,
+            session_id: toSessionId,
             fee_type: oldFeeDetail.fee_type,
             total_amount: newTotalAmount,
             paid_amount: 0,
@@ -163,20 +188,14 @@ export default function PromoteStudents() {
             academic_year: toSession
           });
         } else {
-          // If no existing fee details, create basic structure
-          const { data: feeStructure } = await supabase
-            .from('class_fee_structures')
-            .select('tuition_fee_yearly')
-            .eq('class_grade', toClass)
-            .eq('is_active', true)
-            .single();
-
-          const baseFee = feeStructure?.tuition_fee_yearly || 0;
+          // If no existing fee details, create basic structure using template
+          const baseFee = feeTemplate.tuition_fee_yearly;
           const increaseFactor = 1 + (feeIncreasePercentage / 100);
           const newTotalAmount = baseFee * increaseFactor;
 
           newFeeDetails.push({
             student_id: newStudent.id,
+            session_id: toSessionId,
             fee_type: 'tuition',
             total_amount: newTotalAmount,
             paid_amount: 0,
