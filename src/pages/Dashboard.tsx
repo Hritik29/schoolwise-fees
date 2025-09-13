@@ -2,20 +2,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, DollarSign, AlertTriangle, TrendingUp, GraduationCap, CreditCard, Eye, BarChart3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function Dashboard() {
+  const { currentSessionId, sessions } = useSession();
+  const currentSessionName = sessions.find(s => s.id === currentSessionId)?.session_name;
+  
   // Fetch dashboard stats
   const { data: stats } = useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', currentSessionId],
     queryFn: async () => {
+      if (!currentSessionId) return null;
+      
       const today = new Date().toISOString().split('T')[0];
       
       const [studentsResult, feesResult, transactionsResult, expensesResult, todaysTransactionsResult] = await Promise.all([
-        supabase.from('students').select('*', { count: 'exact' }),
-        supabase.from('student_fees').select('total_amount, paid_amount, outstanding_amount'),
-        supabase.from('fee_transactions').select('amount, transaction_date'),
-        supabase.from('expenses').select('amount, date'),
-        supabase.from('fee_transactions').select('amount').eq('transaction_date', today)
+        supabase.from('students').select('*', { count: 'exact' }).eq('session_id', currentSessionId),
+        supabase.from('student_fees').select('total_amount, paid_amount, outstanding_amount').eq('session_id', currentSessionId),
+        supabase.from('fee_transactions').select('amount, transaction_date').eq('session_id', currentSessionId),
+        supabase.from('expenses').select('amount, date').eq('session_id', currentSessionId),
+        supabase.from('fee_transactions').select('amount').eq('transaction_date', today).eq('session_id', currentSessionId)
       ]);
 
       const totalStudents = studentsResult.count || 0;
@@ -53,8 +59,20 @@ export default function Dashboard() {
         todaysCollection
       };
     },
+    enabled: !!currentSessionId,
     refetchInterval: 30000 // Refresh every 30 seconds for real-time data
   });
+
+  if (!currentSessionId) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-muted-foreground">No Academic Session Selected</h1>
+          <p className="text-muted-foreground mt-2">Please select an academic session to view dashboard data.</p>
+        </div>
+      </div>
+    );
+  }
 
   const statCards = [
     {
@@ -121,7 +139,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Super-Vision Dashboard</h1>
           <p className="text-muted-foreground">
-            Complete school management overview
+            Complete school management overview - {currentSessionName}
           </p>
         </div>
         <div className="text-right">

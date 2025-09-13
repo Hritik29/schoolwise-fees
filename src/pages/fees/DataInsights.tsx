@@ -3,20 +3,27 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, DollarSign, Users, Calendar, CreditCard, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function DataInsights() {
+  const { currentSessionId } = useSession();
+  
   const { data: insights } = useQuery({
-    queryKey: ['fee-insights'],
+    queryKey: ['fee-insights', currentSessionId],
     queryFn: async () => {
-      // Get monthly collection data
+      if (!currentSessionId) return null;
+      
+      // Get monthly collection data for current session
       const { data: transactions } = await supabase
         .from('fee_transactions')
-        .select('amount, transaction_date, payment_method');
+        .select('amount, transaction_date, payment_method')
+        .eq('session_id', currentSessionId);
 
-      // Get fee type distribution
+      // Get fee type distribution for current session
       const { data: fees } = await supabase
         .from('student_fees')
-        .select('total_amount, paid_amount, outstanding_amount, students(class_grade)');
+        .select('total_amount, paid_amount, outstanding_amount, students(class_grade)')
+        .eq('session_id', currentSessionId);
 
       // Get payment method distribution
       const paymentMethods = transactions?.reduce((acc: any, t) => {
@@ -65,7 +72,8 @@ export default function DataInsights() {
           (fees.reduce((sum, f) => sum + Number(f.paid_amount), 0) / 
            fees.reduce((sum, f) => sum + Number(f.total_amount), 0)) * 100 : 0
       };
-    }
+    },
+    enabled: !!currentSessionId
   });
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];

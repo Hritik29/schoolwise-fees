@@ -50,7 +50,6 @@ export default function PromoteStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [feeIncreasePercentage, setFeeIncreasePercentage] = useState<number>(0);
 
   useEffect(() => { document.title = "Promote Students"; }, []);
 
@@ -88,16 +87,9 @@ export default function PromoteStudents() {
       return;
     }
     
-    if (feeIncreasePercentage < 0 || feeIncreasePercentage > 20) {
-      toast({ title: 'Invalid percentage', description: 'Fee increase must be between 0-20%', variant: 'destructive' });
-      return;
-    }
-    
     setLoading(true);
     try {
       const selected = students.filter(s => selectedIds.includes(s.id));
-      
-      // Step 1: Promote students
       const toSessionId = sessions.find(s => s.session_name === toSession)?.id;
       
       if (!toSessionId) {
@@ -106,138 +98,42 @@ export default function PromoteStudents() {
       }
 
       // Check if students already exist in target session to prevent duplicates
-      const existingStudents = await supabase
-        .from('students')
+      const existingEnrollments = await supabase
+        .from('student_enrollments')
         .select('student_id')
         .eq('session_id', toSessionId)
-        .in('student_id', selected.map(s => s.student_id));
+        .in('student_id', selected.map(s => s.id));
 
-      if (existingStudents.data && existingStudents.data.length > 0) {
-        const duplicateIds = existingStudents.data.map(s => s.student_id).join(', ');
+      if (existingEnrollments.data && existingEnrollments.data.length > 0) {
+        const duplicateStudents = selected.filter(s => 
+          existingEnrollments.data.some(e => e.student_id === s.id)
+        );
+        const duplicateNames = duplicateStudents.map(s => `${s.first_name} ${s.last_name}`).join(', ');
         toast({ 
           title: 'Students already enrolled', 
-          description: `Students ${duplicateIds} already exist in ${toSession}`, 
+          description: `Students ${duplicateNames} already exist in ${toSession}`, 
           variant: 'destructive' 
         });
         return;
       }
 
-      const studentRows = selected.map((s) => ({
-        first_name: s.first_name,
-        last_name: s.last_name,
-        student_id: s.student_id, // Keep original student_id consistent across sessions
-        class_grade: toClass,
-        section: s.section,
-        parent_name: s.parent_name,
-        parent_phone: s.parent_phone,
-        parent_email: s.parent_email,
-        phone: s.phone,
-        email: s.email,
-        address: s.address,
-        date_of_birth: s.date_of_birth,
-        admission_date: s.admission_date,
-        status: s.status,
-        aadhar_number: s.aadhar_number,
-        sssm_id: s.sssm_id,
-        apar_id: s.apar_id,
-        account_number: s.account_number,
-        ifsc_code: s.ifsc_code,
-        bank_account_name: s.bank_account_name,
-        academic_session: toSession,
-        session_id: toSessionId,
-      }));
-
-      const { data: newStudents, error: studentError } = await supabase
-        .from('students')
-        .insert(studentRows)
-        .select();
-      
-      if (studentError) throw studentError;
-
-      // Step 2: Check if fee template exists for target class
-      const { data: feeTemplate } = await supabase
-        .from('class_fee_structures')
-        .select('tuition_fee_yearly')
-        .eq('class_grade', toClass)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (!feeTemplate) {
-        toast({ 
-          title: 'No fee template found', 
-          description: `Please create a fee structure for ${toClass} class before promoting students`, 
-          variant: 'destructive' 
+      // Use the new promote_student function for each student
+      for (const student of selected) {
+        const { error } = await supabase.rpc('promote_student', {
+          p_student_id: student.id,
+          p_new_class: toClass,
+          p_new_section: student.section,
+          p_new_session: toSessionId
         });
-        return;
-      }
 
-      // Step 3: Fetch current fee details and calculate new fees
-      const oldStudentIds = selected.map(s => s.id);
-      const fromSessionId = sessions.find(s => s.session_name === fromSession)?.id;
-      const { data: currentFeeDetails, error: feeDetailsError } = await supabase
-        .from('student_fee_details')
-        .select('*')
-        .in('student_id', oldStudentIds)
-        .eq('session_id', fromSessionId);
-
-      if (feeDetailsError) throw feeDetailsError;
-
-      // Step 4: Create new fee details with increased amounts and previous year fees
-      const newFeeDetails = [];
-      for (let i = 0; i < newStudents.length; i++) {
-        const newStudent = newStudents[i];
-        const oldStudent = selected[i];
-        const oldFeeDetail = currentFeeDetails?.find(f => f.student_id === oldStudent.id);
-
-        if (oldFeeDetail) {
-          // Calculate new total amount with percentage increase
-          const increaseFactor = 1 + (feeIncreasePercentage / 100);
-          const newTotalAmount = oldFeeDetail.total_amount * increaseFactor;
-          
-          newFeeDetails.push({
-            student_id: newStudent.id,
-            session_id: toSessionId,
-            fee_type: oldFeeDetail.fee_type,
-            total_amount: newTotalAmount,
-            paid_amount: 0,
-            outstanding_amount: newTotalAmount + oldFeeDetail.outstanding_amount,
-            previous_year_fees: oldFeeDetail.outstanding_amount,
-            academic_year: toSession
-          });
-        } else {
-          // If no existing fee details, create basic structure using template
-          const baseFee = feeTemplate.tuition_fee_yearly;
-          const increaseFactor = 1 + (feeIncreasePercentage / 100);
-          const newTotalAmount = baseFee * increaseFactor;
-
-          newFeeDetails.push({
-            student_id: newStudent.id,
-            session_id: toSessionId,
-            fee_type: 'tuition',
-            total_amount: newTotalAmount,
-            paid_amount: 0,
-            outstanding_amount: newTotalAmount,
-            previous_year_fees: 0,
-            academic_year: toSession
-          });
-        }
-      }
-
-      // Insert new fee details
-      if (newFeeDetails.length > 0) {
-        const { error: newFeeDetailsError } = await supabase
-          .from('student_fee_details')
-          .insert(newFeeDetails);
-
-        if (newFeeDetailsError) throw newFeeDetailsError;
+        if (error) throw error;
       }
 
       toast({ 
         title: 'Success', 
-        description: `${selected.length} students promoted to ${toSession} ${toClass} with ${feeIncreasePercentage}% fee increase` 
+        description: `${selected.length} students promoted to ${toSession} ${toClass}` 
       });
       setSelectedIds([]);
-      setFeeIncreasePercentage(0);
     } catch (e: any) {
       toast({ title: 'Error', description: e.message || 'Promotion failed', variant: 'destructive' });
     } finally {
@@ -297,18 +193,6 @@ export default function PromoteStudents() {
                 {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="feeIncrease" className="text-sm font-medium">Fee Increase Percentage (0-20%)</Label>
-            <Input
-              id="feeIncrease"
-              type="number"
-              min="0"
-              max="20"
-              value={feeIncreasePercentage}
-              onChange={(e) => setFeeIncreasePercentage(Number(e.target.value))}
-              placeholder="Enter percentage (0-20)"
-            />
           </div>
         </CardContent>
       </Card>
