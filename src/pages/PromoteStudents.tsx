@@ -105,10 +105,27 @@ export default function PromoteStudents() {
         return;
       }
 
+      // Check if students already exist in target session to prevent duplicates
+      const existingStudents = await supabase
+        .from('students')
+        .select('student_id')
+        .eq('session_id', toSessionId)
+        .in('student_id', selected.map(s => s.student_id));
+
+      if (existingStudents.data && existingStudents.data.length > 0) {
+        const duplicateIds = existingStudents.data.map(s => s.student_id).join(', ');
+        toast({ 
+          title: 'Students already enrolled', 
+          description: `Students ${duplicateIds} already exist in ${toSession}`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
       const studentRows = selected.map((s) => ({
         first_name: s.first_name,
         last_name: s.last_name,
-        student_id: `${s.student_id}-${toSession}`, // Make student_id unique by appending session
+        student_id: s.student_id, // Keep original student_id consistent across sessions
         class_grade: toClass,
         section: s.section,
         parent_name: s.parent_name,
