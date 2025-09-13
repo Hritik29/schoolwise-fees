@@ -284,6 +284,51 @@ export type Database = {
           },
         ]
       }
+      student_enrollments: {
+        Row: {
+          class_grade: string
+          created_at: string | null
+          enrollment_date: string | null
+          id: string
+          section: string | null
+          session_id: string
+          student_id: string
+        }
+        Insert: {
+          class_grade: string
+          created_at?: string | null
+          enrollment_date?: string | null
+          id?: string
+          section?: string | null
+          session_id: string
+          student_id: string
+        }
+        Update: {
+          class_grade?: string
+          created_at?: string | null
+          enrollment_date?: string | null
+          id?: string
+          section?: string | null
+          session_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_enrollments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_fee_details: {
         Row: {
           academic_year: string | null
@@ -498,7 +543,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      promote_student: {
+        Args: {
+          p_new_class: string
+          p_new_section: string
+          p_new_session: string
+          p_student_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
