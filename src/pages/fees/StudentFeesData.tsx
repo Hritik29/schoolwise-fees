@@ -81,6 +81,7 @@ export default function StudentFeesData() {
               parent_phone
             )
           `)
+          .eq('session_id', currentSessionId)
           .order('created_at', { ascending: false });
 
         if (allError) throw allError;
